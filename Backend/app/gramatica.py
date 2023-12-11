@@ -16,7 +16,7 @@ global_arr = []
 reservadas = {
     'smallint': 'SMALLINT',
     'integer': 'INTEGER',
-    'biginit': 'BIGINIT',
+    'bigint': 'BIGINT',
     'decimal': 'DECIMAL',
     'numeric': 'NUMERIC',
     'real': 'REAL',
