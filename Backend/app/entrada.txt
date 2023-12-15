@@ -8,7 +8,7 @@ create table estudiante(
     apellido varchar not null
 );
 
-insert into estudiante values (1,'Emilio','Maldonado'),
+insert into estudiante values (1,'Emilio','Maldonado');
 (2,'Marcos','Aguare'),
 delete from estudiante where nombre = 'Emilio';
 update estudiante set nombre = 'Jose Rodriguez' where idestudiante = 2;
