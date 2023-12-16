@@ -1,0 +1,158 @@
+<nav class="navbar is-dark" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="/home">
+            <img src="assets/logo.png" height="28">
+        </a>
+    </div>
+    <div id="navbarBasicExample" class="navbar-menu">
+        <div class="navbar-start">
+            <a class="navbar-item">
+                Inicio
+            </a>
+            <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link">
+                    <span class="icon is-small mr-1">
+                        <i class="fas fa-file"></i>
+                    </span>
+                    Archivo
+                </a>
+                <div class="navbar-dropdown">
+                    <a class="navbar-item" (click)="addTab()">
+                        Nuevo
+                    </a>
+                    <a class="navbar-item">
+                        Abrir <input class="file-input" type="file" (change)="onFileSelected($event)"
+                            accept=".sql, .txt">
+                    </a>
+
+                    <a (click)="saveTabToSQL()" class="navbar-item">
+                        Guardar
+                    </a>
+                    <a class="navbar-item">
+                        Guardar Como
+                    </a>
+                    <hr class="navbar-divider">
+                    <a class="navbar-item">
+                        Cerrar
+                    </a>
+                    <a class="navbar-item">
+                        Salir
+                    </a>
+                </div>
+            </div>
+            <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link">
+                    <span class="icon is-small mr-1">
+                        <i class="fas fa-wrench"></i>
+                    </span>
+                    Opciones
+                </a>
+                <div class="navbar-dropdown">
+                    <a class="navbar-item">
+                        Exportar
+                    </a>
+                    <a class="navbar-item">
+                        Importar
+                    </a>
+                </div>
+            </div>
+            <a class="navbar-item">
+                <span class="icon is-small mr-1">
+                    <i class="fas fa-book"></i>
+                </span>
+                Documentación
+            </a>
+            <a class="navbar-item" href="https://github.com/Aguare/AgileSQLtoXML" target="_blank">
+                <span class="icon is-small mr-1">
+                    <i class="fa fa-github-square" aria-hidden="true"></i>
+                </span>
+                Repositorio
+            </a>
+        </div>
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <div class="buttons">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+<div class="container mt-5">
+    <div class="columns">
+        <div class="column mt-0">
+            <app-tree-view [dataBases]="dataBases"></app-tree-view>
+        </div>
+        <div class="column">
+            <div class="tabs-container">
+                <div class="pb-1 is-1">
+                    <button class="button is-rounded is-small is-success">
+                        <span class="icon is-small">
+                            <i class="fas fa-play-circle"></i>
+                        </span>
+                        <span>Ejecutar</span>
+                    </button>
+
+                    <button (click)="addTab()" class="button is-rounded ml-1 is-small is-info">
+                        <span class="icon is-small">
+                            <i class="fas fa-plus"></i>
+                        </span>
+                        <span>Agregar</span>
+                    </button>
+
+                    <button (click)="addTab()" class="button is-rounded ml-1 is-small is-link is-light">
+                        <span class="icon is-small">
+                            <i class="fas fa-file-import"></i>
+                        </span>
+                        <span>Importar</span>
+                        <input class="file-input" type="file" (change)="onFileSelected($event)" accept=".sql, .txt">
+                    </button>
+
+                    <button (click)="addTab()" class="button is-rounded ml-1 is-small is-warning">
+                        <span class="icon is-small">
+                            <i class="fas fa-download"></i>
+                        </span>
+                        <span>Exportar</span>
+                    </button>
+
+                    <button (click)="closeAllTabs()" class="button is-rounded ml-1 is-small is-danger">
+                        <span class="icon is-small">
+                            <i class="fas fa-times"></i>
+                        </span>
+                        <span>Cerrar Pestañas</span>
+                    </button>
+                </div>
+                <div class="tabs has-background-grey-darker is-small">
+                    <ul>
+                        <li *ngFor="let tab of tabs" [class.is-active]="tab.isActive">
+                            <a class="has-text-white" (click)="selectTab(tab)">{{ tab.label }}</a>
+                            <button class="delete" (click)="closeTab(tab)"></button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="editors" *ngFor="let tab of tabs">
+                    <ngx-codemirror *ngIf="tab.isActive" [options]="{
+                        theme: 'dracula',
+                        mode: 'sql',
+                        lineNumbers: true,
+                        styleActiveLine: true
+                      }" [(ngModel)]="tab.code"></ngx-codemirror>
+                </div>
+                <div class="container mt-6">
+                    <article class="message is-info">
+                        <div class="message-header">
+                            Salida de Datos
+                        </div>
+                        <ngx-codemirror class="console" [options]="{
+                            theme: 'dracula',
+                            mode: 'sql',
+                            lineNumbers: true,
+                            readOnly: true,
+                            styleActiveLine: true
+                          }" [(ngModel)]="console"></ngx-codemirror>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
