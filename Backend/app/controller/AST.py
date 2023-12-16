@@ -1,4 +1,4 @@
-import Gramatica as g
+import gramatica as g
 import controller.symTable as TS
 from models.expresiones import *
 from models.instrucciones import *
