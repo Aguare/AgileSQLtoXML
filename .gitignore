@@ -151,6 +151,7 @@ pubspec.lock
 *.swp
 modules/.settings
 modules/.vscode
+**/.vscode/
 .vimrc
 .nvimrc
 
