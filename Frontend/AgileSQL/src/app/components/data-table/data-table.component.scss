@@ -1,0 +1,10 @@
+.table-content{
+    max-width: 1000px;
+    height: 400px !important;
+    margin-top: -25px;
+
+    .table-container {
+        height: 350px !important;
+        overflow-y: auto;
+    }
+}

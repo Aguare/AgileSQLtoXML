@@ -3,6 +3,7 @@ import { TabEditor } from '../../models/TabEditor';
 import { DataBase } from '../../models/DataBase';
 import { Table } from '../../models/Table';
 import Swal from 'sweetalert2';
+import { CompilerServiceService } from '../../services/compiler-service.service';
 
 
 @Component({
@@ -11,8 +12,10 @@ import Swal from 'sweetalert2';
   styleUrl: './home.component.scss'
 })
 export class HomeComponent {
-  code: any = 'SELECT * FROM table';
-  console: any = 'Console messages';
+  code: any = '';
+  console: any = '';
+  showConsole: boolean = true;
+
   tabs: Array<TabEditor> = [
     new TabEditor(1, "Tab 1", true),
     new TabEditor(2, "Tab 2"),
@@ -55,6 +58,36 @@ export class HomeComponent {
     new DataBase(3, "DataBase 3", this.tables_ex, this.functions_ex, this.procedures_ex),
   ];
 
+  constructor(
+    private _compilerService: CompilerServiceService,
+  ) {
+
+  }
+
+  executeCode() {
+    const tabSelected = this.tabs.find(tab => tab.isActive);
+    if (!tabSelected) {
+      return;
+    }
+    this._compilerService.compile(tabSelected?.code).then((res: any) => {
+      if (res.status == 200) {
+        res.json().then((data: any) => {
+          this.console += data.message + "\n";
+          this.console += data.mensajes + "\n";
+          this.console += data.type + "\n";
+        });
+      } else {
+        res.json().then((data: any) => {
+          this.console += data.message + "\n";
+        });
+      }
+    },
+      (error: any) => {
+        this.console += "No hay conexión con el servidor" + "\n";
+      }
+    );
+  }
+
   selectTab(tab: any) {
     this.tabs.forEach((tab: any) => tab.isActive = false);
     tab.isActive = true;
@@ -78,7 +111,7 @@ export class HomeComponent {
   }
 
   closeTab(tab: any) {
-    if (tab.code == ""){
+    if (tab.code == "") {
       this.closeTabDefinitive(tab);
       return;
     }
@@ -167,5 +200,5 @@ export class HomeComponent {
       });
     }
   }
-  
+
 }

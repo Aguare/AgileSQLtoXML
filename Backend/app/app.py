@@ -3,7 +3,7 @@ from flask_cors import CORS
 from backend import *
 
 app = Flask(__name__)
-CORS(app)  # Habilita CORS
+CORS(app, resources={r"/api/*": {"origins": "*", "allow_headers": "Content-Type"}})  # Habilita CORS
 
 # Lista global para almacenar mensajes
 outputTxt = []
@@ -12,7 +12,7 @@ outputTxt = []
 def index():
     return render_template('index.html')
 
-@app.route('/api/analizar', methods=['POST'])
+@app.route('/api/compile', methods=['POST'])
 def api_analizar():
     global outputTxt
     reiniciarVariables()
@@ -23,7 +23,7 @@ def api_analizar():
         return respuesta  # Devuelve directamente la respuesta JSON generada
 
     except Exception as e:
-        return jsonify({"mensaje": str(e), "tipo": "error"}), 500
+        return jsonify({"message": str(e), "type": "error"}), 500
 
 
 @app.route('/api/generar_reporte_errores', methods=['GET'])

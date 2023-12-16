@@ -16,11 +16,11 @@ def analizar_codigo(codigo):
 
         # Convierte los mensajes a un formato JSON
         # mensajes_json = [msg.to_dict() for msg in outputTxt]
-        return jsonify({"mensaje": "Análisis completado", "mensajes": lista, "tipo": "exito"})
+        return jsonify({"message": "Análisis completado", "mensajes": lista, "type": "exito"}), 200
 
     except Exception as e:
         # Maneja errores generales y retorna una respuesta con el error
-        return jsonify({"mensaje": str(e), "tipo": "error"})
+        return jsonify({"message": str(e), "tipo": "error"}), 500
 
 def reiniciarVariables():
     global outputTxt

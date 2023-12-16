@@ -24,3 +24,10 @@
     height: 250px !important;
   }
 }
+
+.column-toolbar{
+  position: absolute;
+  z-index: 1;
+  top: 44px;
+  right: -41px;
+}

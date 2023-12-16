@@ -1,0 +1,18 @@
+<div class="table-content">
+    <div class="table-container">
+        <table class="table is-hoverable is-bordered">
+            <thead>
+                <tr>
+                    <th class="is-dark" *ngFor="let c of columns">
+                        {{ c }}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let r of data">
+                    <td *ngFor="let d of r">{{ d }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

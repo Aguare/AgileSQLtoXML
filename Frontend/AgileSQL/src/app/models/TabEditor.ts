@@ -1,7 +1,7 @@
 export class TabEditor{
     id: number;
     label: string;
-    code: string = "";
+    code: string = "CREATE DATABASE patitoJuan; USE patitoJuan;";
     console: string = "";
     isActive: boolean = false;
 
