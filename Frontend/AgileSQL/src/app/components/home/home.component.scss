@@ -1,0 +1,26 @@
+.tabs-container{
+    width: 1000px;
+}
+
+.editors{
+    margin-top: -24px;
+}
+
+.tabs {
+    ul { 
+      li {
+        display: flex;
+        align-items: center;
+  
+        .delete {
+          margin-left: -10px;
+        }
+      }
+    }
+}
+  
+.console{
+  .CodeMirror{
+    height: 250px !important;
+  }
+}

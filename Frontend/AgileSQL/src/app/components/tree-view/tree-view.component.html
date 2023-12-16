@@ -1,0 +1,43 @@
+<div class="container tree-view">
+    <article class="panel is-info" style="margin-bottom: 0%;">
+        <p class="panel-heading">
+            <i class="fas fa-database"></i> Bases de Datos
+        </p>
+    </article>
+    <article class="panel is-link mtw" style="max-height: 750px; overflow-y: auto;">
+        <div *ngFor="let bd of dataBases">
+            <aside class="menu">
+                <ul class="menu-list">
+                    <li>
+                        <a (click)="selectBD(bd.id)"
+                            [ngClass]="{'has-background-info' : bd.isActive, 'has-text-white': bd.isActive}"
+                            [class.has-background-info]="bd.isActive">
+                            <i class="fas fa-database mr-2" aria-hidden="true"></i>
+                            {{ bd.name }}
+                        </a>
+                        <ul *ngIf="bd.isActive">
+                            <a (click)="showTablesBD(bd.id)"
+                                [ngClass]="{'has-background-info' : bd.showTables, 'has-text-white': bd.showTables}"><i
+                                    class="fas fa-table mr-2" aria-hidden="true"></i>Tablas</a>
+                            <div *ngIf="bd.showTables">
+                                <li *ngFor="let table of bd.tables"><a>{{ table.name }}</a></li>
+                            </div>
+                            <a *ngIf="bd.functions" (click)="showFunctionsBD(bd.id)"
+                                [ngClass]="{'has-background-info' : bd.showFunctions, 'has-text-white': bd.showFunctions}"><i
+                                    class="fas fa-table mr-2" aria-hidden="true"></i>Funciones</a>
+                            <div *ngIf="bd.showFunctions">
+                                <li *ngFor="let fn of bd.functions"><a>{{ fn }}</a></li>
+                            </div>
+                            <a *ngIf="bd.procedures" (click)="showProceduresBD(bd.id)"
+                                [ngClass]="{'has-background-info' : bd.showProcedures, 'has-text-white': bd.showProcedures}"><i
+                                    class="fas fa-table mr-2" aria-hidden="true"></i>Procedimientos</a>
+                            <div *ngIf="bd.showProcedures">
+                                <li *ngFor="let pr of bd.procedures"><a>{{ pr }}</a></li>
+                            </div>
+                        </ul>
+                    </li>
+                </ul>
+            </aside>
+        </div>
+    </article>
+</div>
