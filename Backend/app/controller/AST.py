@@ -5,6 +5,7 @@ from models.instrucciones import *
 import models.Funciones as f
 from controller.temporal import *
 import math
+from tree.reporteAST import *
 from prettytable import PrettyTable
 import copy
 import itertools
@@ -358,7 +359,7 @@ def eliminar_Tabla(instr,ts):
             msg='no existe la base de datos activa:'+baseActiva
             agregarMensaje('error',msg)
         elif(result==3):
-            Errores_Semanticos.append("Error Semantico: 42P01: La tabla "+nombreT +" no existe")
+            Errores_Semanticos.append("Error Semantico:  La tabla "+nombreT +" no existe")
             msg='Tabla no existe: '+nombreT
             agregarMensaje('error',msg)
         
@@ -402,7 +403,7 @@ def crear_Tabla(instr,ts):
         if(herencia==None):
             crearOK=False
             Errores_Semanticos.append("Error Semantico: No existe la tabla para la herencia:"+nombPadre)
-            msg='42P01:No existe la tabla para la herencia:'+nombPadre
+            msg='No existe la tabla para la herencia:'+nombPadre
             agregarMensaje('error',msg)
         #copiar las columnas
         else:
@@ -443,20 +444,20 @@ def crear_Tabla(instr,ts):
                                     crearOK=False
                                     msg='primary key repetida:'+pkC.lower()
                                     agregarMensaje('error',msg) 
-                                    Errores_Semanticos.append("Error Semantico: 42P16: Primary key Repetida "+pkC.lower())
+                                    Errores_Semanticos.append("Error Semantico: Primary key Repetida "+pkC.lower())
                                       
                         if(exCol==False):
                             crearOK=False
-                            Errores_Semanticos.append("Error Semantico: 42P16: No se puede asignar como primaria: "+pkC.lower())
-                            msg='42P16:No se puede asignar como primaria:'+pkC.lower()
+                            Errores_Semanticos.append("Error Semantico: No se puede asignar como primaria: "+pkC.lower())
+                            msg='No se puede asignar como primaria:'+pkC.lower()
                             agregarMensaje('error',msg)
                             
 
                 else: 
                     crearOK=False
-                    msg='42P16:Solo puede existir un bloque de PK(list)'
+                    msg='Solo puede existir un bloque de PK(list)'
                     agregarMensaje('error',msg)
-                    Errores_Semanticos.append("Error Semantico: 42P16:  Solo puede existir un bloque de PK(list)")
+                    Errores_Semanticos.append("Error Semantico:Solo puede existir un bloque de PK(list)")
             #bloque de foraneas
             else:
                 refe=colum.referencia.lower()
@@ -464,9 +465,9 @@ def crear_Tabla(instr,ts):
                 #no existe la tabla de referencia
                 if(tablaRef==None):
                     crearOK=False
-                    msg='42P01:no existe la referencia a la Tabla '+refe
+                    msg='no existe la referencia a la Tabla '+refe
                     agregarMensaje('error',msg)
-                    Errores_Semanticos.append("Error Semantico: 42P01: No existe la referencia a la Tabla "+refe)
+                    Errores_Semanticos.append("Error Semantico: No existe la referencia a la Tabla "+refe)
                 else:
                     #validar #columnas==#refcolums
                     if(len(colum.columnas)==len(colum.columnasRef)):
@@ -499,31 +500,31 @@ def crear_Tabla(instr,ts):
 
                                                 if(pkC.tipo!=lcol.tipo):
                                                     crearOK=False
-                                                    msg='42804:no coicide el tipo de dato:'+colum.columnasRef[pos]
+                                                    msg='no coicide el tipo de dato:'+colum.columnasRef[pos]
                                                     agregarMensaje('error',msg)
                                                     Errores_Semanticos.append("Error Semantico: no coicide el tipo de dato:"+colum.columnasRef[pos])
                                                 break                                  
                                         if(exPK==False):
                                             crearOK=False
-                                            msg='42703:no existe la referencia pk:'+colum.columnasRef[pos]
+                                            msg='no existe la referencia pk:'+colum.columnasRef[pos]
                                             agregarMensaje('error',msg)
-                                            Errores_Semanticos.append("Error Semantico 42703: No existe la referencia pk: "+colum.columnasRef[pos])
+                                            Errores_Semanticos.append("Error Semantico No existe la referencia pk: "+colum.columnasRef[pos])
                                     else:
                                         crearOK=False
                                         msg='foreign key repetida:'+fkC.lower()
                                         agregarMensaje('error',msg)
-                                        Errores_Semanticos.append("Error Semantico 42P16: foreign key repetida: "+fkC.lower())
+                                        Errores_Semanticos.append("Error Semantico: foreign key repetida: "+fkC.lower())
                             if(exCol==False):
                                 crearOK=False
-                                msg='42P16:No se puede asignar como foranea:'+fkC.lower()
+                                msg='No se puede asignar como foranea:'+fkC.lower()
                                 agregarMensaje('error',msg)
-                                Errores_Semanticos.append('Error Semantico 42P16:No se puede asignar como foranea: '+fkC.lower())
+                                Errores_Semanticos.append('Error Semantico: No se puede asignar como foranea: '+fkC.lower())
                             pos=pos+1
                     else:
                         crearOK=False
-                        msg='42P16: la cantidad de referencias es distinta: '+str(len(colum.columnas))+'!='+str(len(colum.columnasRef))
+                        msg='la cantidad de referencias es distinta: '+str(len(colum.columnas))+'!='+str(len(colum.columnasRef))
                         agregarMensaje('error',msg)
-                        Errores_Semanticos.append('Error Semantico 42P16: la cantidad de referencias es distinta: '+str(len(colum.columnas))+'!='+str(len(colum.columnasRef)))
+                        Errores_Semanticos.append('Error Semantico: la cantidad de referencias es distinta: '+str(len(colum.columnas))+'!='+str(len(colum.columnasRef)))
         #columna
         elif isinstance(colum, columnaTabla) :
             contC=contC+1
@@ -535,9 +536,9 @@ def crear_Tabla(instr,ts):
                 if(listaColumnas[pos].nombre==colAux.nombre):
                     crearOK=False;
                     colOK=False
-                    msg='42701:nombre de columna repetido:'+colAux.nombre
+                    msg='nombre de columna repetido:'+colAux.nombre
                     agregarMensaje('error',msg)
-                    Errores_Semanticos.append('Error Semantico 42701:nombre de columna repetido:'+colAux.nombre)
+                    Errores_Semanticos.append('Error Semantico nombre de columna repetido:'+colAux.nombre)
                     break;
                 else:
                     pos=pos+1
@@ -565,14 +566,14 @@ def crear_Tabla(instr,ts):
                                     errT=False#no existe error
                             if errT:
                                 crearOK=False
-                                msg='42601:el tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre
+                                msg='el tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre
                                 agregarMensaje('error',msg)
-                                Errores_Semanticos.append('Error Semantico: 42601: El tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre)
+                                Errores_Semanticos.append('Error Semantico: El tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre)
                         else:
                             crearOK=False
-                            msg='42601:el tipo '+colAux.tipo+' solo acepta 1 parametro: '+colAux.nombre
+                            msg='el tipo '+colAux.tipo+' solo acepta 1 parametro: '+colAux.nombre
                             agregarMensaje('error',msg)
-                            Errores_Semanticos.append('Error Semantico: 42601:el tipo '+colAux.tipo+' solo acepta 1 parametro: '+colAux.nombre)
+                            Errores_Semanticos.append('Error Semantico: el tipo '+colAux.tipo+' solo acepta 1 parametro: '+colAux.nombre)
                     elif(colAux.tipo=='decimal' or colAux.tipo=='numeric'):
                         if(len(colum.valor)==1):
                             errT=True;#variable error en p varchar(p)
@@ -583,9 +584,9 @@ def crear_Tabla(instr,ts):
                                     errT=False#no existe error
                             if errT:
                                 crearOK=False
-                                msg='42601:el tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre
+                                msg='el tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre
                                 agregarMensaje('error',msg)
-                                Errores_Semanticos.append('Error Semantico: 42601:el tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre)
+                                Errores_Semanticos.append('Error Semantico: el tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre)
                         elif(len(colum.valor)==2):
                             errT=True;#variable error en p varchar(p)
                             if (isinstance(colum.valor[0],Operando_Numerico) and isinstance(colum.valor[1],Operando_Numerico)):
@@ -597,19 +598,19 @@ def crear_Tabla(instr,ts):
                                     errT=False#no existe error
                             if errT:
                                 crearOK=False
-                                msg='42601:el tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre
+                                msg='el tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre
                                 agregarMensaje('error',msg)
-                                Errores_Semanticos.append('Error Semantico: 42601:el tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre)
+                                Errores_Semanticos.append('Error Semantico: el tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre)
                         else:
                             crearOK=False
-                            msg='42601:el tipo '+colAux.tipo+' acepta maximo 2 parametro: '+colAux.nombre
+                            msg='el tipo '+colAux.tipo+' acepta maximo 2 parametro: '+colAux.nombre
                             agregarMensaje('error',msg)
-                            Errores_Semanticos.append('Error Semantico: 42601:el tipo '+colAux.tipo+' acepta maximo 2 parametro: '+colAux.nombre)
+                            Errores_Semanticos.append('Error Semantico: el tipo '+colAux.tipo+' acepta maximo 2 parametro: '+colAux.nombre)
                     else:
                         crearOK=False
-                        msg='42601:el tipo '+colAux.tipo+' no acepta parametros:'+colAux.nombre
+                        msg='el tipo '+colAux.tipo+' no acepta parametros:'+colAux.nombre
                         agregarMensaje('error',msg)
-                        Errores_Semanticos.append('Error Semantico: 42601:el tipo '+colAux.tipo+' no acepta parametros:'+colAux.nombre)
+                        Errores_Semanticos.append('Error Semantico: el tipo '+colAux.tipo+' no acepta parametros:'+colAux.nombre)
                 if(colum.zonahoraria!=False):
                     '''aca se debe verificar la zonahoraria es una lista'''
                     print('zonahoraria',colum.zonahoraria)
@@ -623,53 +624,53 @@ def crear_Tabla(instr,ts):
                                     T=validarTipo(colAux.tipo,T)
                                     if isinstance(atributoC.default,Operando_ID):
                                         crearOK=False
-                                        msg='42804:no se puede asignar como default un ID col:'+colAux.nombre
+                                        msg='no se puede asignar como default un ID col:'+colAux.nombre
                                         agregarMensaje('error',msg)
-                                        Errores_Semanticos.append('Error Semantico: 42804:no se puede asignar como default un ID col:'+colAux.nombre)
+                                        Errores_Semanticos.append('Error Semantico: no se puede asignar como default un ID col:'+colAux.nombre)
                                     elif(T==None or isinstance(atributoC.default,Operando_ID)):
                                         T=''
                                         crearOK=False
-                                        msg='42804:valor default != '+colAux.tipo+ ' en col:'+colAux.nombre
+                                        msg='valor default != '+colAux.tipo+ ' en col:'+colAux.nombre
                                         agregarMensaje('error',msg)
-                                        Errores_Semanticos.append('Error Semantico: 42804:valor default != '+colAux.tipo+ ' en col:'+colAux.nombre)
+                                        Errores_Semanticos.append('Error Semantico: valor default != '+colAux.tipo+ ' en col:'+colAux.nombre)
                                     colAux.default=T#guardar default
                                 else:
                                     crearOK=False
-                                    msg='42P16:atributo default repetido en Col:'+colAux.nombre
+                                    msg='atributo default repetido en Col:'+colAux.nombre
                                     agregarMensaje('error',msg)
-                                    Errores_Semanticos.append('Error Semantico: 42P16:atributo default repetido en Col:'+colAux.nombre)
+                                    Errores_Semanticos.append('Error Semantico: atributo default repetido en Col:'+colAux.nombre)
                             elif(atributoC.constraint!=None):
                                 if(colAux.constraint==None):
                                     colAux.constraint=atributoC.constraint#guardar constraint
                                 else:
                                     crearOK=False
-                                    msg='42P16:atributo constraint repetido en Col:'+colAux.nombre
+                                    msg='atributo constraint repetido en Col:'+colAux.nombre
                                     agregarMensaje('error',msg)
-                                    Errores_Semanticos.append('Error Semantico: 42P16:atributo constraint repetido en Col:'+colAux.nombre)
+                                    Errores_Semanticos.append('Error Semantico: atributo constraint repetido en Col:'+colAux.nombre)
                             elif(atributoC.null!=None):
                                 if(colAux.anulable==None):
                                     colAux.anulable=atributoC.null#guardar anulable
                                 else:
                                     crearOK=False
-                                    msg='42P16:atributo anulable repetido en Col:'+colAux.nombre
+                                    msg='atributo anulable repetido en Col:'+colAux.nombre
                                     agregarMensaje('error',msg)
-                                    Errores_Semanticos.append('Error Semantico: 42P16:atributo anulable repetido en Col:'+colAux.nombre)
+                                    Errores_Semanticos.append('Error Semantico: atributo anulable repetido en Col:'+colAux.nombre)
                             elif(atributoC.unique!=None):
                                 if(colAux.unique==None):
                                     colAux.unique=atributoC.unique#guardar unique
                                 else:
                                     crearOK=False
-                                    msg='42P16:atributo unique repetido en Col:'+colAux.nombre
+                                    msg='atributo unique repetido en Col:'+colAux.nombre
                                     agregarMensaje('error',msg)
-                                    Errores_Semanticos.append('Error Semantico: 42P16:atributo unique repetido en Col:'+colAux.nombre)
+                                    Errores_Semanticos.append('Error Semantico: atributo unique repetido en Col:'+colAux.nombre)
                             elif(atributoC.primary!=None):
                                 if(colAux.primary==None):
                                     colAux.primary=atributoC.primary#guardar primary
                                 else:
                                     crearOK=False
-                                    msg='42P16:atributo primary repetido en Col:'+colAux.nombre
+                                    msg='atributo primary repetido en Col:'+colAux.nombre
                                     agregarMensaje('error',msg)
-                                    Errores_Semanticos.append('Error Semantico: 42P16:atributo primary repetido en Col:'+colAux.nombre)
+                                    Errores_Semanticos.append('Error Semantico: atributo primary repetido en Col:'+colAux.nombre)
                             elif(atributoC.check != None):
                                 #el atributo check trae otra lista
                                 print('check:',atributoC.check)
@@ -706,9 +707,9 @@ def crear_Tabla(instr,ts):
         while pos<len(listFK):
             if(lenFK[pos]!=lenPK[pos]):
                 crearOK=False
-                msg='42830:llave foranea debe ser compuesta ref:'+listFK[pos]
+                msg='llave foranea debe ser compuesta ref:'+listFK[pos]
                 agregarMensaje('error',msg)
-                Errores_Semanticos.append('Error Semantico: 42830:llave foranea debe ser compuesta ref:'+listFK[pos])
+                Errores_Semanticos.append('Error Semantico: llave foranea debe ser compuesta ref:'+listFK[pos])
             pos+=1
         #print('lista de Referencias:',listFK)
         #print('count pk en la  refe:',lenFK)
@@ -721,9 +722,9 @@ def crear_Tabla(instr,ts):
         if(result!=None):
             for tab in result:
                 if tab==nombreT:
-                    msg='42P07:Error la tabla ya existe:'+nombreT
+                    msg='Error la tabla ya existe:'+nombreT
                     agregarMensaje('error',msg)
-                    Errores_Semanticos.append('Error Semantico: 42P07: Latabla '+ nombreT + ' ya existe')
+                    Errores_Semanticos.append('Error Semantico:  Latabla '+ nombreT + ' ya existe')
                     crearOK=False
                     break
             if crearOK:
@@ -774,7 +775,7 @@ def crear_Type(instr,ts):
                 if cont != len(instr.valores):
                     msg='No todos los valores son del mismo tipo'
                     agregarMensaje('error',msg)
-                    Errores_Semanticos.append('Error Semantico: 42804:No todos los valores son del mismo tipo')
+                    Errores_Semanticos.append('Error Semantico: No todos los valores son del mismo tipo')
                 else:
                     flag=True
             if(flag): # crea e inserta valores
@@ -812,7 +813,7 @@ def crear_Type(instr,ts):
                     agregarMensaje('error',msg)
                     Errores_Semanticos.append('Error Semantico:  La base de datos no existe')
                 elif respuestatype==3:
-                    msg='42P07:Nombre repetido ...'
+                    msg='Nombre repetido ...'
                     agregarMensaje('error',msg)
                     Errores_Semanticos.append('Error Semantico: Nombre repetido')
     else:
@@ -1098,8 +1099,8 @@ def insertar_en_tabla(instr,ts):
             val=validarSizePres(col.tipo,ValInsert[pos],col.size,col.precision)
             if(val==False):
                 insertOK=False
-                msg='22001:valor muy grande para la columna:'+col.nombre
-                #Errores_Semanticos.append('Error semantico: 22001:valor muy grande para la columna:'+col.nombre)
+                msg='valor muy grande para la columna:'+col.nombre
+                #Errores_Semanticos.append('Error semantico: valor muy grande para la columna:'+col.nombre)
                 agregarMensaje('error',msg)
             pos=pos+1
     #realizar insert 
@@ -1147,11 +1148,11 @@ def insertar_en_tabla(instr,ts):
             msg='no existe DB:'+baseActiva
             agregarMensaje('error',msg)
         elif (result==3):
-            msg='42P01:tabla no existe:'+nombreT
+            msg='tabla no existe:'+nombreT
             agregarMensaje('error',msg)
             Errores_Semanticos.append('Error Semantico: tabla no existe:'+nombreT)
         elif (result==4):
-            msg='23505:llave primaria duplicada:'
+            msg='llave primaria duplicada:'
             Errores_Semanticos.append('Error Semantico: llave primaria duplicada:')
         elif (result==5):
             msg='columnas faltantes para ejecucion'
@@ -1165,6 +1166,7 @@ def update_register(exp,llaves,ts,baseAc,tablenm,nameC,valor):
         col = {}
         ##########################################
         #EXTRACT TABLE se obtienen los registros con panda se dejo " " como ejemplo baseAc - tablenm
+        ''' Donde baseAc es la base de datos activa, tablenm es el nombre de la tabla, col es el diccionario de columnas y registros es el diccionario de registros'''
         registros=""
         for registro in registros:
             atributosact=[]
@@ -1176,6 +1178,7 @@ def update_register(exp,llaves,ts,baseAc,tablenm,nameC,valor):
                         col[indiceColum(baseAc,tablenm,nameC)]=valor
                         ##########################################
                         #UPDATE TABLE se actualiza el registro con panda se dejo " " como ejemplo baseAc - tablenm - col - atributosact
+                        ''' Donde baseAc es la base de datos activa, tablenm es el nombre de la tabla, col es el diccionario de columnas y atributosact es el diccionario de atributos'''
                         respuesta=""
                         if respuesta==0:
                             agregarMensaje('exito','Registro actualizado.')
@@ -1202,7 +1205,7 @@ def update_register(exp,llaves,ts,baseAc,tablenm,nameC,valor):
                         elif respuesta==2:
                             agregarMensaje('error','Base de datos no existe')
                         elif respuesta==3:
-                            agregarMensaje('error','42P01:Tabla '+tablenm+' no registrada')
+                            agregarMensaje('error','Tabla '+tablenm+' no registrada')
                             Errores_Semanticos.append('Error semantico: Tabla '+tablenm+' no registrada')
     else:
         agregarMensaje('error','No se encontro la llave primaria')
@@ -1486,13 +1489,13 @@ def AlterTBF(instr,ts):
                     ' '
                     #existe la columna no la crea
                     print("la columna YA existe")
-                    outputTxt='42701:La columna:'+ID+" ya Existe en la tabla:"+NombreTabla
+                    outputTxt='La columna:'+ID+" ya Existe en la tabla:"+NombreTabla
                     agregarMensaje('error',outputTxt)
             else:
                 ' '
                 #la tabla no existe
                 print("la tabla no existe")
-                outputTxt='42P01:La tabla:'+NombreTabla+" no Existe"
+                outputTxt='La tabla:'+NombreTabla+" no Existe"
                 agregarMensaje('error',outputTxt)
         else:
             ' '
@@ -1746,7 +1749,7 @@ def Constraint_Resuelve(Obj_Add_Const,tablab,ID):
             agregarMensaje('normal',outputTxt)
             ' '
         else:
-            outputTxt="23505:Error no se puede guardar en la tabla Constraint UNIQUE"
+            outputTxt="Error no se puede guardar en la tabla Constraint UNIQUE"
             agregarMensaje('error',outputTxt)
             print("Error no se puede guardar la tabla constraint")
 
@@ -1787,13 +1790,13 @@ def Constraint_Resuelve(Obj_Add_Const,tablab,ID):
                     print(pre_con)
 
                     if not(pre_con):
-                        outputTxt="23505:Ya existe una Llave primaria en la tabla"
+                        outputTxt="Ya existe una Llave primaria en la tabla"
                         agregarMensaje('error',outputTxt)
                     if (DatoRepetido):
-                        outputTxt="23505:Hay registros repetidos en la columna "
+                        outputTxt="Hay registros repetidos en la columna "
                         agregarMensaje('error',outputTxt)
                     if (DatoRepetidoQuery):
-                        outputTxt="23505:Hay columnas Repetidas en query primary"
+                        outputTxt="Hay columnas Repetidas en query primary"
                         agregarMensaje('error',outputTxt)
                     if (nulosR):
                         outputTxt="23502:Hay registros Nulos en la columna "
@@ -1835,7 +1838,7 @@ def Constraint_Resuelve(Obj_Add_Const,tablab,ID):
                 #Transfiere el valor, para no guardar informacion, o si guardarla 
                 #existenCols=copy.deepcopy(existeC)
                 if existeC==0:
-                    outputTxt="42703:La columna:",col_rev," no existe en la tabla"
+                    outputTxt="La columna:",col_rev," no existe en la tabla"
                     agregarMensaje('error',outputTxt)
                     print("La columna:",col_rev," no existe en la tabla")
                     break
@@ -1863,7 +1866,7 @@ def Constraint_Resuelve(Obj_Add_Const,tablab,ID):
             
             ' '
         else:
-            outputTxt="23000:Error no se puede guardar constraint primary key en la tabla"
+            outputTxt="Error no se puede guardar constraint primary key en la tabla"
             agregarMensaje('error',outputTxt)
             print("Error no se puede guardar la tabla constraint")
 
@@ -2053,7 +2056,7 @@ def Constraint_Resuelve(Obj_Add_Const,tablab,ID):
                     ' '
                     print("NO   se puede guardar2")
 
-                    outputTxt="42703:Error una de las columnas asignadas o a asignar no existe"
+                    outputTxt="Error una de las columnas asignadas o a asignar no existe"
                     agregarMensaje('error',outputTxt)
                     GuardaF=False
                     break
@@ -2752,10 +2755,10 @@ def Cuerpo_ALTER_DROP(NombreTabla,ObjetoAnalisis,INSTRUCCION,ID):
 
 
             else:
-                outputTxt='42P16:La tabla debe tener al menos 1 columna'
+                outputTxt='La tabla debe tener al menos 1 columna'
                 agregarMensaje('error',outputTxt)
         else:
-            outputTxt='42P01:La tabla '+NombreTabla +' no existe en la base de datosc'
+            outputTxt='La tabla '+NombreTabla +' no existe en la base de datosc'
             agregarMensaje('error',outputTxt)
             #la tabla no existe en cabeceras o cuerpo
     elif INSTRUCCION.upper()=="CONSTRAINT":
@@ -2906,8 +2909,8 @@ def cuerpo_select_parametros(distinct,parametros,cuerpo,ts):
     for col in lcolumnas:
         if(col not in lcabeceras):
             colEx=False
-            msg='42703: No existe columna en tabla:'+str(col)
-            Errores_Semanticos.append('Error semantico: 42703: No existe columna en tabla:'+str(col))
+            msg=' No existe columna en tabla:'+str(col)
+            Errores_Semanticos.append('Error semantico:  No existe columna en tabla:'+str(col))
             agregarMensaje('error',msg)
              
     if colEx:
@@ -2996,13 +2999,13 @@ def filtroWhere(tabla,filtro,ts):
                             cont+=1
                     else:
                         filtroOK=False
-                        msg='42804:no es posible evaluar el where'
-                        Errores_Semanticos.append('Error semantico: 42804:no es posible evaluar el where')
+                        msg='no es posible evaluar el where'
+                        Errores_Semanticos.append('Error semantico: no es posible evaluar el where')
                         agregarMensaje('error',msg)
                 else:
                     filtroOK=False
-                    msg='42804:no es posible evaluar el where'
-                    Errores_Semanticos.append('Error Semantico: 42804:no es posible evaluar el where')
+                    msg='no es posible evaluar el where'
+                    Errores_Semanticos.append('Error Semantico: no es posible evaluar el where')
                     agregarMensaje('error',msg)
             else:
                 filtroOK=False
@@ -3058,19 +3061,19 @@ def filtroWhere(tabla,filtro,ts):
                             cont+=1
                     else:
                         filtroOK=False
-                        msg='42804:no es posible evaluar el where'
-                        Errores_Semanticos.append('Error semantico: 42804:no es posible evaluar el where')
+                        msg='no es posible evaluar el where'
+                        Errores_Semanticos.append('Error semantico: no es posible evaluar el where')
                         agregarMensaje('error',msg)
                 else:
                     filtroOK=False
-                    msg='42804:no es posible evaluar el where'
-                    Errores_Semanticos.append('Error semantico: 42804:no es posible evaluar el where')
+                    msg='no es posible evaluar el where'
+                    Errores_Semanticos.append('Error semantico: no es posible evaluar el where')
                     agregarMensaje('error',msg)
 
         else:
             filtroOK=False
-            msg='42804:no es posible evaluar el where'
-            Errores_Semanticos.append('Error semantico: 42804:no es posible evaluar el where')
+            msg='no es posible evaluar el where'
+            Errores_Semanticos.append('Error semantico: no es posible evaluar el where')
             agregarMensaje('error',msg)
     #recursividad        
     elif isinstance(filtro,Operacion_Logica_Binaria):
@@ -3096,7 +3099,7 @@ def filtroWhere(tabla,filtro,ts):
     else:
         filtroOK=False
         msg='debe haber una condicion relacional en el where'
-        Errores_Semanticos.append('Error semantico: 42804: Debe haber una condicion relacional en el where')
+        Errores_Semanticos.append('Error semantico:  Debe haber una condicion relacional en el where')
         agregarMensaje('error',msg)
 
     #realizar eliminacion
@@ -3403,10 +3406,12 @@ def Analizar(input):
         print(mensaje_error)  # Imprime el error en la consola del servidor Flask
         return {"mensaje": mensaje_error, "tipo": "error", "error": True}
 
-
-
-
-
+#Metodos para graficar el ast 
+def generarAST():
+    global listaInstrucciones
+    astGraph = DOTAST()
+    astGraph.getDot(listaInstrucciones)
+    
 def generarGDSC():
     '''global listaInstrucciones
     r_asc = Reporte_Gramaticas()
@@ -3464,4 +3469,3 @@ def agregarSalida(listaMensajes):
                 txt=msg.mensaje
                 listmsg.append(txt)
                 # print(mensaje_completo)
-

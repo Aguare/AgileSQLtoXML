@@ -2,6 +2,7 @@ import controller.AST
 from flask import jsonify
 from controller.manageErrors import *
 
+
 manejador_json = ManageErrors()
 
 def analizar_codigo(codigo):
@@ -13,6 +14,7 @@ def analizar_codigo(codigo):
         lista = controller.AST.Analizar(codigo)  # Aquí ejecutas el análisis del código
         lista_errores = manejador_json.leer_archivo()
         lista.extend(lista_errores)
+        controller.AST.generarAST();
 
         # Convierte los mensajes a un formato JSON
         # mensajes_json = [msg.to_dict() for msg in outputTxt]
