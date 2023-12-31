@@ -11,6 +11,7 @@ import os
 """
    # return os.path.exists(nombre_archivo)
 
+
 def crear_base_de_datos(nombre_archivo):
     if verificar_existencia_base_de_datos(nombre_archivo):
         print("Base de datos Existente")
@@ -22,11 +23,11 @@ def crear_base_de_datos(nombre_archivo):
         print("Base de datos creada con éxito.")
         return 0
     
+     #  root = ET.Element("base_de_datos")
+      #  tree = ET.ElementTree(root)
+       # tree.write("archivosBD/"+nombre_archivo+".xml", encoding="utf-8", xml_declaration=True)
+            # Crear un DataFrame vacío y guardarlo como XML
 
-
-
-
-    
 
 def verificar_existencia_base_de_datos(nombre_archivo):
      return os.path.exists("Backend/app/funcionesSql/archivosBD/"+nombre_archivo+".xml")     
@@ -73,6 +74,7 @@ def agregar_tabla(nombre_archivo, nombre_tabla, columnas, llave_primaria=None, l
 
         tree.write("Backend/app/funcionesSql/archivosBD/"+nombre_archivo+".xml", encoding="utf-8", xml_declaration=True)
         return 0
+
 
 def agregar_fila(nombre_archivo, nombre_tabla, datos):
     if not verificar_existencia_base_de_datos(nombre_archivo):
@@ -138,10 +140,11 @@ def agregar_fila(nombre_archivo, nombre_tabla, datos):
             nueva_fila[-1].tail = "\n"
 
         tree.write("Backend/app/funcionesSql/archivosBD/"+nombre_archivo+".xml", encoding="utf-8", xml_declaration=True)
-
     
 
-   
+
+
+
 
 def verificar_tipo_dato(valor, tipo_dato):
     # Verificar el tipo de dato del valor
@@ -258,14 +261,58 @@ def alterar_tabla_agregar(nombre_archivo, nombre_tabla, operacion, **columnas):
         print("Error: Operación no válida. Use 'agregar' o 'eliminar'.")
 
     tree.write("Backend/app/funcionesSql/archivosBD/"+nombre_archivo+".xml", encoding="utf-8", xml_declaration=True)
+    
+def seleccionar_filas(nombre_archivo, nombre_tabla, condiciones=None):
+    tree = ET.parse("archivosBD/"+nombre_archivo+".xml")
+    root = tree.getroot()
+
+    # Buscar la tabla y sus columnas
+    tabla_existente = root.find(nombre_tabla)
+    if tabla_existente is None:
+        print(f"Error: La tabla '{nombre_tabla}' no existe.")
+        return
+
+    columnas_tabla = [columna.get("nombre") for columna in tabla_existente.findall("columna")]
+
+    # Crear una lista de diccionarios para almacenar los datos seleccionados
+    datos_seleccionados = []
+
+    # Iterar sobre las filas y verificar las condiciones
+    for fila_existente in tabla_existente.findall("fila"):
+        datos_fila = {}
+        for columna in columnas_tabla:
+            valor_columna = fila_existente.find(columna)
+            datos_fila[columna] = None if valor_columna is None else valor_columna.text
+
+        # Verificar las condiciones, si se proporcionan
+        if condiciones is None or evaluar_condiciones(datos_fila, condiciones):
+            datos_seleccionados.append(datos_fila)
+
+    return datos_seleccionados
+
+def evaluar_condiciones(datos_fila, condiciones):
+    for columna, condicion in condiciones.items():
+        valor_columna = datos_fila.get(columna)
+
+        if valor_columna is None:
+            return False  # La columna no existe en la fila
+
+        # Verificar la condición
+        if not eval(f"{valor_columna} {condicion}"):
+            return False
+
+    return True
 
 
 
-
-#funciona como select simple 
 def leer_datos_panda(nombre_archivo, nombre_tabla):
     tree = ET.parse("Backend/app/funcionesSql/archivosBD/"+nombre_archivo+".xml")
     root = tree.getroot()
+
+     # Verificar si la tabla existe
+    if root.find(nombre_tabla) is None:
+        print(f"Error: La tabla '{nombre_tabla}' no existe en el archivo '{nombre_archivo}'.")
+        return None
 
     # Obtener columnas de la tabla
     columnas_tabla = [columna.get("nombre") for columna in root.find(nombre_tabla).findall("columna")]
@@ -284,34 +331,445 @@ def leer_datos_panda(nombre_archivo, nombre_tabla):
 
     return df
 
-
-#en proceso
-def select_completo_complejo(baseActiva,columnas,tablas,condiciones):
+def select_final(baseActiva,columnas,tablas,condiciones=None):
     print(columnas)
     print(len(columnas))
+    print("Cantidad de tablas "+str(len(tablas)))
     print(tablas)
     print(condiciones)
-
+    condicionesIniciadas = False
+    erroEncontrado=False
+    datos_df=""
+    talbasFrame= []
+    comparaciones = []
+    comparacionesNumericas=[]
+    listaIndices=[]
     
-    datos_df = leer_datos_panda(baseActiva, tablas)
+    
+    if verificar_existencia_base_de_datos(baseActiva):
+        print("Base activa existente")
+        
+        #creando frames de tablas y validando la cantidad 
+        
+        #valida si solo viene una tabla
+        if tablas:
+            #cuando solo viene una tabla y varias tablas
+            if len(tablas)==1:
+                dataFrame1 = leer_datos_panda(baseActiva,tablas[0])
+                talbasFrame.append(dataFrame1)
+                
+                
+            elif len(tablas) > 1:
+                for i, tabla in enumerate(tablas):
+                    dataFrameTemp = leer_datos_panda(baseActiva,tabla)
+                    talbasFrame.append(dataFrameTemp)
+                    listaIndices.append({tabla:i})
+                    
+        # condiciones 
+            if condiciones:
+                for i, condicion in enumerate(condiciones):
+                    textoDividido = condicion.split()
+                    
+                    if '.' in textoDividido[0] and '.' in textoDividido[2]:
+                        
+                        
+                        if(es_numero(textoDividido[2])):
+                            comparacionesNumericas.append(textoDividido)
+                        else:    
+                            print( "Estructura con referencia a tabla y columna en ambos casos")
+                            
+                            
+                            nombreColumna=textoDividido[0].split(".")
+                            nombreColumna2 = textoDividido[2].split(".")
+
+                            nombreTalba=textoDividido[0].split(".")
+                            tabla2 = textoDividido[2].split(".")
+
+                            print("Columna 1 "+nombreColumna[1])
+
+                            print("Columna 2 "+nombreColumna2[1])
+                        
+                        #claves = list(listaIndices.keys())
+                        # Obtener el valor asociado a la clave 'maeterias'
+                            valor_uno = next((item[nombreTalba[0]] for item in listaIndices if nombreTalba[0] in item), None)
+                            print("valor uno "+str(valor_uno))
+                        # Obtener el valor asociado a la clave 'usuarios'
+                            valor_dos = next((item[tabla2[0]] for item in listaIndices if tabla2[0] in item), None)
+                            print("valor dos "+str(valor_dos))
+
+                            comparaciones.append([(nombreColumna[1], valor_uno), (nombreColumna2[1], valor_dos)])
+                    #comparaciones.append([('nombre', 3), ('nombre', 4)]
+                        
+                    
+                    elif '.' in textoDividido[0]:
+                        print( "Estructura con referencia solo a tabal y columna")
+                        print(textoDividido)
+                        print("Texto unido "+textoUnido)
+                        
+                        print("Texto unido + anterior "+textoDividido)
+                        textoUnido = [textoDividido[0], textoDividido[1],' '.join(textoDividido[2:])]
+                        
+                        comparacionesNumericas.append(textoUnido)
+                        
+                    else:
+                        print( "Estructura simple ")
+                        print(textoDividido)
+                        
+                        textoUnido = [textoDividido[0], textoDividido[1],' '.join(textoDividido[2:])]
+                        #print("Texto unido "+textoUnido)
+
+                        comparacionesNumericas.append(textoUnido)
+                        
+                        
+                if comparaciones :
+                    resultado = comparar_columnas(talbasFrame,comparaciones)
+                    if comparacionesNumericas:
+                        for condicionNum in comparacionesNumericas:
+                            nombreTablayCol = condicionNum[0].split(".")
+                            print(nombreTablayCol)
+                            valor_tabla = next((item[nombreTablayCol[0]] for item in listaIndices if nombreTablayCol[0] in item), None)
+                            print("valor uno "+str(valor_uno))
+                    
+                            resultado = filtrar_por_condicion(resultado,nombreTablayCol[1]+"_df"+str(valor_tabla),condicionNum[1],condicionNum[2])
+                        print("-----------Resultado pre final comparacion y numericos------------")
+                        print(resultado)
+                        columnaSeleccionadas = []
+                        if columnas!= "*":
+                            for columna in columnas:
+                                print("Inciando for para seleccionar columnas")
+                                if "." in columna:
+                                    columnaDividia = columna.split(".")
+                                    valor_tabla = next((item[columnaDividia[0]] for item in listaIndices if columnaDividia[0] in item), None)
+                                    columnaSeleccionadas.append(columnaDividia[columnaDividia[1]+"_df"+str(valor_tabla)])
+                                else:
+                                    columnaSeleccionadas.append(columna)
+                            
+                           
+                            finalFrame = resultado[columnaSeleccionadas]
+                            print("--------Resultado supuestamente final xd final --------")
+                            print(finalFrame)
+                        
+                        else:
+                            print("-----------Resultado supuestamente final sin elegir------------")
+                            print(resultado)
+                        
+                else :
+                    if comparacionesNumericas:
+                        resultado = talbasFrame[0];
+                        for condicionNum in comparacionesNumericas:
+                            
+                            print(condicionNum)
+                            nombreTablayCol = condicionNum[0].split()                        
+                            print("condicion simple xd probando que sale")
+                            print(nombreTablayCol)
+                            #dataFrame1=talbasFrame[0]
+                            resultado = filtrar_por_condicion(resultado,condicionNum[0],condicionNum[1],condicionNum[2])
+                            print("--------Resultado pre final solo numerico --------")
+                            print(resultado)
+                        columnaSeleccionadas = []
+                        if columnas!= "*":
+                            for columna in columnas:
+                                print("Inciando for para seleccionar columnas")
+                                if "." in columna:
+                                    columnaDividia = columna.split(".")
+                                    valor_tabla = next((item[columnaDividia[0]] for item in listaIndices if columnaDividia[0] in item), None)
+                                    columnaSeleccionadas.append(columnaDividia[columnaDividia[1]+"_df"+str(valor_tabla)])
+                                else:
+                                    columnaSeleccionadas.append(columna)
+                            
+                           
+                            finalFrame = resultado[columnaSeleccionadas]
+                            print("--------Resultado supuestamente final xd final --------")
+                            print(finalFrame)
+                        
+                        else:
+                            print("-----------Resultado supuestamente final sin elegir------------")
+                            print(resultado)
+                            
+                        
+            
+            else:
+                print("sin condicion")
+                #falta armar ejecucion aqui , cunado no haya condiciones 
+                #primero hacer unir todas las tablas y luego validar las columnsa nuevamente 
+                if len(talbasFrame)>1:
+                    merge_resultado = pd.concat(talbasFrame, axis=1)
+                    columnaSeleccionadas = []
+                    if columnas!= "*":
+                        for columna in columnas:
+                            print("Inciando for para seleccionar columnas")
+                            if "." in columna:
+                                columnaDividia = columna.split(".")
+                                valor_tabla = next((item[columnaDividia[0]] for item in listaIndices if columnaDividia[0] in item), None)
+                                columnaSeleccionadas.append(columnaDividia[columnaDividia[1]+"_df"+str(valor_tabla)])
+                            else:
+                                columnaSeleccionadas.append(columna)
+                            
+                           
+                            finalFrame = merge_resultado[columnaSeleccionadas]
+                            print("--------Resultado supuestamente final xd final --------")
+                            print(finalFrame)
+                        
+                        else:
+                            print("-----------Resultado supuestamente final sin elegir------------")
+                            print(merge_resultado)
+                
+                elif len(talbasFrame)==1:
+                    #validar que si existan las columnas
+                    print(talbasFrame[0][columnas])
+                    #falta seleccionar columnas
+            
+    
+         #bloque en donde no hay condiciones   
+            
+        else :
+            print("error no hay tablas para la seleccion")
+    else:
+        print("Base activa NO EXISTE")
+    
+    
+    
+#validacion para los decimales     
+def es_numero(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False    
 
 
 
-    selected_columns = datos_df[columnas]
+
+
+#equivale a  tbcreditoobligacion.Credito = tbcreditoSaldo.credito  && tbcliente.codigocliente = tbcreditoobligacion.codigocliente
+
+def comparar_columnas(dataframes, comparaciones):
+    # Renombrar columnas antes de la unión
+    for i, df in enumerate(dataframes):
+        df.columns = [f'{col}_df{i}' for col in df.columns]
+
+    # Realizar la unión de los DataFrames
+        print("comparacions desde la fun ")
+        print(comparaciones)
+        merge_resultado = pd.concat(dataframes, axis=1)
+
+    # Iterar sobre las comparaciones y filtrar el resultado
+    for i, (columna1_info, columna2_info) in enumerate(comparaciones):
+        columna1, dataframe1 = columna1_info
+        columna2, dataframe2 = columna2_info
+
+        # Asegurarse de que las columnas existan en el resultado
+        if columna1 + f'_df{dataframe1}' not in merge_resultado.columns:
+            print(f'Error: La columna {columna1} no existe en el DataFrame {dataframe1}.')
+            continue
+        if columna2 + f'_df{dataframe2}' not in merge_resultado.columns:
+            print(f'Error: La columna {columna2} no existe en el DataFrame {dataframe2}.')
+            continue
+
+        # Realizar la comparación y filtrar el resultado
+        merge_resultado = merge_resultado[merge_resultado[columna1 + f'_df{dataframe1}'] == merge_resultado[columna2 + f'_df{dataframe2}']]
+
+    # Imprimir columnas disponibles después de la unión
+    print(f'\nColumnas disponibles después de la unión:\n{merge_resultado.columns}')
+
+    # Imprimir sufijos generados para las comparaciones
+    sufijos_generados = [f'_df{i}' for i in range(len(dataframes))]
+    print(f'Sufijos generados para las comparaciones: {sufijos_generados}')
+
+    return merge_resultado
 
 
 
+#verificar que sea numerico
 
-    # Aplicar condiciones si están presentes
-    if condiciones:
-        for condition in condiciones:
-            selected_columns = selected_columns.query(condition)
+def filtrar_por_condicion(dataframe, columna, operador, valor):
+    """
+    Filtra un DataFrame según una condición dada.
 
-        # Agregar el resultado al DataFrame final
-    result_df = pd.concat([result_df, selected_columns], axis=1)
+    Parámetros:
+    - dataframe: DataFrame de pandas.
+    - columna: Nombre de la columna a utilizar en la comparación.
+    - operador: Operador de comparación (<, >, ==, >=, <=).
+    - valor: Valor a comparar.
 
-    return result_df
+    Retorna:
+    - DataFrame filtrado según la condición.
+    """
+    # Verificar que la columna exista en el DataFrame
+    if columna not in dataframe.columns:
+        print(f"Error: La columna '{columna}' no existe en el DataFrame.")
+        return None
+
+
+        
+
+    # Convertir la columna a valores numéricos ignorando errores
+    if valor.isdigit():
+        print("valor tipo numerico")
+        dataframe[columna] = pd.to_numeric(dataframe[columna], errors='coerce')
+        
+            # Realizar la comparación según el operador dado
+        if operador == '<':
+            resultado = dataframe[dataframe[columna] < int(valor)]
+        elif operador == '>':
+            resultado = dataframe[dataframe[columna] > int(valor)]
+        elif operador == '=':
+            resultado = dataframe[dataframe[columna] == int(valor)]
+        elif operador == '>=':
+            resultado = dataframe[dataframe[columna] >= int(valor)]
+        elif operador == '<=':
+            resultado = dataframe[dataframe[columna] <= int(valor)]
+        else:
+            print("Error: Operador no válido. Utilice '<', '>', '==', '>=', '<='. ")
+            return None
+
+        return resultado
+    
+    elif es_numero(valor):
+        print("xd")
+        print("valor tipo decimal")
+        dataframe[columna] = pd.to_numeric(dataframe[columna], errors='coerce')
+        
+            # Realizar la comparación según el operador dado
+        if operador == '<':
+            resultado = dataframe[dataframe[columna] < float(valor)]
+        elif operador == '>':
+            resultado = dataframe[dataframe[columna] > float(valor)]
+        elif operador == '=':
+            resultado = dataframe[dataframe[columna] == float(valor)]
+        elif operador == '>=':
+            resultado = dataframe[dataframe[columna] >= float(valor)]
+        elif operador == '<=':
+            resultado = dataframe[dataframe[columna] <= float(valor)]
+        else:
+            print("Error: Operador no válido. Utilice '<', '>', '==', '>=', '<='. ")
+            return None
+
+        return resultado
+     
+    else:
+        if operador == '=':
+            resultado = dataframe[dataframe[columna] == valor]
+            return resultado
+        else:
+            print("Error: Operador no válido en strings.")
+            return None
+        print("")
+    
+    
+#funciones de UPDATE 
+def actualizar_datos(nombre_archivo, nombre_tabla, condiciones, datos_nuevos):
+    tree = ET.parse("archivosBD/"+nombre_archivo+".xml")
+    root = tree.getroot()
+
+    # Obtener un DataFrame de pandas a partir de datos XML
+    df = leer_datos_panda(nombre_archivo, nombre_tabla)
+
+    # Obtener índices de las filas que cumplen con las condiciones
+    indices_filas = obtener_indices_filas(df, condiciones)
+#    if not indices_filas:
+    if len(indices_filas) == 0:
+        print("Error: No hay filas que cumplan con las condiciones de actualización.")
+        return 2
+
+    # Actualizar los datos en el DataFrame
+    for indice in indices_filas:
+        for columna, valor in datos_nuevos.items():
+            df.at[indice, columna] = valor
+
+    # Guardar el DataFrame actualizado de nuevo en el archivo XML
+    guardar_datos_panda(df, nombre_archivo, nombre_tabla)
+
+
+def parsear_condicion(condicion):
+    """
+    Parsea una condición en la forma columna operador valor.
+    """
+    if isinstance(condicion, tuple) and len(condicion) == 3:
+        return condicion
+    else:
+        print("Error: Condición mal formada.")
+        return None, None, None
+
+def obtener_indices_filas(dataframe, condiciones):
+    indices_filas = dataframe.index
+    print(f"DataFrame original:\n{dataframe}")
+    for condicion in condiciones:
+        columna, operador, valor = parsear_condicion(condicion)
+        try:
+            print(f"Condición: {columna} {operador} {valor}")
+            print(f"Columna antes de aplicar la condición:\n{dataframe[columna]}")
+            dataframe[columna] = pd.to_numeric(dataframe[columna], errors='coerce')
+            mask = comparar_condicion(dataframe[columna], operador, valor)
+            print(f"Mask después de aplicar la condición:\n{mask}")
+            indices_filas = indices_filas[mask]
+            print(f"Índices después de aplicar la condición: {indices_filas}")
+        except KeyError:
+            print(f"Error: La columna '{columna}' no existe en el DataFrame.")
+            return []
+    return indices_filas.tolist()
+
+
+def comparar_condicion(columna, operador, valor):
+    if operador == "=":
+        return columna == valor
+    elif operador == "!=":
+        return columna != valor
+    elif operador == "<":
+        return columna < valor
+    elif operador == ">":
+        return columna > valor
+    elif operador == "<=":
+        return columna <= valor
+    elif operador == ">=":
+        return columna >= valor
+    else:
+        print(f"Error: Operador no válido: {operador}")
+        return None
+
+def comparar_valores(valor1, operador, valor2):
+    """
+    Compara dos valores según el operador especificado.
+    Devuelve True si la comparación es verdadera, False en caso contrario.
+    """
+    if operador == "=":
+        return valor1 == valor2
+    elif operador == "!=":
+        return valor1 != valor2
+    elif operador == "<":
+        return valor1 < valor2
+    elif operador == ">":
+        return valor1 > valor2
+    elif operador == "<=":
+        return valor1 <= valor2
+    elif operador == ">=":
+        return valor1 >= valor2
+    else:
+        print("Error: Operador no válido.")
+        return False
 
 
 
+def guardar_datos_panda(dataframe, nombre_archivo, nombre_tabla):
+    # Obtener el elemento de la tabla en el archivo XML
+    tree = ET.parse("Backend/app/funcionesSql/archivosBD/"+nombre_archivo+".xml")
+    root = tree.getroot()
+    tabla_existente = root.find(nombre_tabla)
+
+    # Eliminar las filas antiguas de la tabla en el XML
+    for fila_existente in tabla_existente.findall("fila"):
+        tabla_existente.remove(fila_existente)
+
+    # Agregar las filas actualizadas al XML
+    for indice, fila in dataframe.iterrows():
+        nueva_fila = ET.SubElement(tabla_existente, "fila")
+        nueva_fila.tail = "\n"
+        for columna, valor in fila.items():
+            ET.SubElement(nueva_fila, columna).text = str(valor)
+            nueva_fila[-1].tail = "\n"
+
+    # Guardar el árbol XML actualizado
+    tree.write("archivosBD/"+nombre_archivo+".xml", encoding="utf-8", xml_declaration=True)
+
+  
 
