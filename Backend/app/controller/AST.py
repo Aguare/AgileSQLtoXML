@@ -9,6 +9,7 @@ from tree.reporteAST import *
 from prettytable import PrettyTable
 import copy
 import itertools
+import funcionesSql.funcionesSql as fsql
 
 
 

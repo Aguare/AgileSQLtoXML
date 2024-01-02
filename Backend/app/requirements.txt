@@ -42,3 +42,4 @@ Flask-Cors==3.0.10
 jsonify==0.5
 PrettyTable==2.2.1
 graphviz==0.17
+pandas==1.3.4

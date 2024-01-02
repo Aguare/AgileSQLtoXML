@@ -15,9 +15,9 @@ def analizar_codigo(codigo):
         lista_errores = manejador_json.leer_archivo()
         lista.extend(lista_errores) #unir lista de output y la de errores
         
-        controller.AST.generarAST();
+        #controller.AST.generarAST();
         
-        json_reporte = controller.AST.generarTSReporte();
+        #json_reporte = controller.AST.generarTSReporte();
 
         # Convierte los mensajes a un formato JSON
         # mensajes_json = [msg.to_dict() for msg in outputTxt]
