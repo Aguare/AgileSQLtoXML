@@ -1367,7 +1367,6 @@ def AlterDBF(instr,ts):
             outputTxt='Se ha ejecutado con exito la modificacion DB ID'
             agregarMensaje('normal',outputTxt)
 
-
 def AlterTBF(instr,ts):
 
     #global outputTxt
@@ -3412,10 +3411,6 @@ def generarAST():
     astGraph = DOTAST()
     astGraph.getDot(listaInstrucciones)
     
-def generarGDSC():
-    '''global listaInstrucciones
-    r_asc = Reporte_Gramaticas()
-    r_asc.grammarDSC(listaInstrucciones)'''
 
 #metodo para mostrar las tablas temporales
 def mostrarTablasTemp():
@@ -3436,12 +3431,21 @@ def mostrarTablasTemp():
 
 def generarTSReporte():
     global outputTS
-    textTs=PrettyTable()
-    textTs.title='REPORTE TABLA DE SIMBOLOS'
-    textTs.field_names=['instruccion','identificador','tipo','referencia','dimension']
+     # Convertir outputTS a formato JSON
+    outputTS_json = []
     for x in outputTS:
-        textTs.add_row([x.instruccion,x.identificador,x.tipo,x.referencia,x.dimension])
-    return textTs
+        ts_entry = {
+            'instruccion': x.instruccion,
+            'identificador': x.identificador,
+            'tipo': x.tipo,
+            'referencia': x.referencia,
+            'dimension': x.dimension
+        }
+        outputTS_json.append(ts_entry)
+
+    # Convertir la lista de diccionarios a JSON
+    outputTS_json_str = json.dumps(outputTS_json, indent=2)
+    return outputTS_json_str
 
 
 def agregarSalida(listaMensajes):
