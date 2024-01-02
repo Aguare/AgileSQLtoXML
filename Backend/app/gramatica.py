@@ -35,7 +35,7 @@ Reservadas = {
     'primary':'PRIMARY',
     'key':'KEY',
     'foreign':'FOREIGN',
-    'references':'REFERENCES',
+    'reference':'REFERENCE',
     'inherits':'INHERITS',
     'insert':'INSERT',
     'into':'INTO',
@@ -50,8 +50,8 @@ Reservadas = {
     'or':'OR',
     'character':'character',
     'varying':'varying',
-    'varchar':'varchar',
-    'char':'char',
+    'nvarchar':'nvarchar',
+    'nchar':'nchar',
     'text':'text',
     'timestamp':'timestamp',
     'with':'with',
@@ -68,7 +68,7 @@ Reservadas = {
     'second':'SECOND',
     'select':'SELECT',
     'distinct':'DISTINCT',
-     'group':'GROUP',
+    'group':'GROUP',
     'by':'BY',
     'having':'HAVING',
     'order':'ORDER',
@@ -191,10 +191,14 @@ Reservadas = {
     'current_time':'CURRENT_TIME',
     'use':'USE',
     'count':'COUNT',
-    'sum':'SUM',
+    'suma':'SUMA',
     'avg':'AVG',
     'max':'MAX',
-    'min':'MIN'
+    'min':'MIN',
+    'concatena':'CONCATENA',
+    'substraer':'SUBSTRAER',
+    'hoy':'HOY',
+    'contar':'CONTAR',
 }
 
 # list of tokens
@@ -220,7 +224,7 @@ tokens = [
     'MENOR', # <
     'ASTERISCO', # *
     'RESTA', # -
-    'SUMA', # +
+    'PLUS', # +
     'DIVISION', # /
     'POTENCIA', # ^
     'MODULO', # %
@@ -264,7 +268,7 @@ t_MENOR = r'\<'
 
 #arithmetic operators
 t_RESTA = r'-'
-t_SUMA = r'\+'
+t_PLUS = r'\+'
 t_DIVISION = r'\/'
 t_POTENCIA = r'\^'
 t_MODULO = r'\%'
@@ -345,7 +349,7 @@ precedence = (
                ('left', 'DESIGUAL2', 'MAYORIGUAL'),
                ('left', 'MENORIGUAL', 'MAYOR'),
                ('left', 'MENOR'),
-               ('left', 'SUMA', 'RESTA'),
+               ('left', 'PLUS', 'RESTA'),
                ('left', 'ASTERISCO', 'DIVISION'),
                ('left', 'POTENCIA', 'MODULO'),
                ('right', 'UMENOS', 'USQRT2'),
@@ -371,7 +375,6 @@ def p_l_sentencias2(t):
 def p_lista_instrucciones(t):
      'sentencias : sentencia PTCOMA'
      t[0] = t[1]
-
 
 def p_instruccion(t):
      '''sentencia : sentencia_ddl 
@@ -597,7 +600,7 @@ def p_alttbadd3(t):
      '''alttbadd3 : CHECK PAR_A exp PAR_C
                   | UNIQUE PAR_A alttbadd4 PAR_C
                   | PRIMARY KEY PAR_A alttbadd4 PAR_C
-                  | FOREIGN KEY PAR_A alttbadd4 PAR_C REFERENCES  ID PAR_A alttbadd4 PAR_C'''
+                  | FOREIGN KEY PAR_A alttbadd4 PAR_C REFERENCE ID PAR_A alttbadd4 PAR_C'''
      temp=t[1]
      temp=temp.upper()
      
@@ -681,7 +684,6 @@ def p_seleccionar_solo(t):
      '''seleccionar : seleccionar1'''
      t[0] = t[1]
 
-
 def p_extract(t):
      '''extract : nowf
                 | timestamp valoresdefault'''
@@ -715,7 +717,7 @@ def p_extract_current_time(t):
      t[0] = Operacion_CURRENT('time')
 
 def p_nowf(t):
-     '''nowf : NOW PAR_A PAR_C'''
+     '''nowf : HOY PAR_A PAR_C'''
      t[0] = Operacion_NOW()
 
 def p_extract1(t):
@@ -734,12 +736,16 @@ def p_offset_opcional(t):
      t[0] = t[2]
 
 def p_seleccionar1(t):
-     '''seleccionar1 : SELECT cantidad_select parametros_select cuerpo_select 
-                     | SELECT funciones_alias'''
-     if len(t) == 5:
-          t[0] = SELECT(t[2],t[3],t[4],None)
+     '''seleccionar1 : SELECT parametros_select cuerpo_select 
+                     | SELECT funciones_alias
+                     | SELECT funciones_alias cuerpo_select'''
+     if len(t) == 3:
+          t[0] = SELECT(t[1],t[2],t[3],None)
+     elif len(t) == 2:
+               t[0] = SELECT(None,None,None,t[2])
      else:
-          t[0] = SELECT(None,None,None,t[2])
+          t[0] = SELECT(t[1],t[2],t[3],None)
+     
 
 
 def p_funciones_alias(t):
@@ -761,15 +767,8 @@ def p_funcion_alias(t):
 def p_funcionGREALEAST(t):
      '''funcionGREALEAST : GREATEST PAR_A lista_exp PAR_C
                          | LEAST PAR_A lista_exp PAR_C '''
-     t[0] = Operacion_Great_Least(t[1].lower(),t[3])
+     t[0] = Operacion_Great_Least(t[1].lower(),t[3])             
 
-def p_cantidad_select(t):
-     '''cantidad_select : DISTINCT'''
-     t[0] = t[1]
-                
-def p_cantidad_select_empty(t):
-     '''cantidad_select : empty'''
-     t[0] = False               
 
 def p_parametros_select(t):
      '''parametros_select : ASTERISCO 
@@ -794,6 +793,7 @@ def p_value_select(t):
      else:
           if t[1] == "(":
                t[0] = Valor_Select(None,'subquery',t[4],t[2])
+               t[0].columns = [t[1]]
           else:
                t[0] = t[0] = Valor_Select(Operando_ID(t[1]),'*',t[4],None)
 
@@ -923,9 +923,9 @@ def p_value_from(t):
      if len(t) == 2:
           t[0] = Valor_From(t[1],None,None)
      elif len(t) == 5:
-          t[0] = Valor_From(None,t[2],Operando_ID(t[4]))
+          t[0] = Valor_From(None,t[2],t[4])
      else:
-          t[0] = Valor_From(None,t[2],Operando_ID(t[5]))
+          t[0] = Valor_From(None,t[2],t[5])
 
 def p_tabla_name(t):
      '''tabla_name : ID
@@ -1239,17 +1239,17 @@ def p_funcion_math(t):
           elif(t[1].lower() ==  'decode'):
                     t[0] = Operacion_String_Binaria(t[3],t[5],OPERACION_BINARY_STRING.DECODE)
      
-     
-def p_funciones_select_count(t):
-     '''funcion_math : COUNT PAR_A val_count PAR_C'''
-     t[0] = Funcion_select(t[3],FUNCIONES_SELECT.COUNT)
 
 def p_funciones_select_restantes(t):
-     '''funcion_math : SUM PAR_A exp PAR_C
+     '''funcion_math : SUMA PAR_A exp PAR_C
                      | AVG PAR_A exp PAR_C
                      | MAX PAR_A exp PAR_C
-                     | MIN PAR_A exp PAR_C'''
-     if t[1].lower() == "sum":
+                     | MIN PAR_A exp PAR_C
+                     | SUBSTRAER PAR_A funcion_concat_names PAR_C
+                     | CONCATENA PAR_A funcion_concat_names PAR_C
+                     | CONTAR PAR_A exp PAR_C
+                     | CONTAR PAR_A ASTERISCO PAR_C'''
+     if t[1].lower() == "suma":
           t[0] = Funcion_select(t[3],FUNCIONES_SELECT.SUM)
      elif t[1].lower() == "avg":
           t[0] = Funcion_select(t[3],FUNCIONES_SELECT.AVG)
@@ -1257,6 +1257,17 @@ def p_funciones_select_restantes(t):
           t[0] = Funcion_select(t[3],FUNCIONES_SELECT.MAX)
      elif t[1].lower() == "min":
           t[0] = Funcion_select(t[3],FUNCIONES_SELECT.MIN)
+     elif t[1].lower() == "concatena":
+          t[0] = Funcion_select(t[3],FUNCIONES_SELECT.CONCAT)
+     elif t[1].lower() == "contar":
+          t[0] = Funcion_select(t[3],FUNCIONES_SELECT.COUNT)
+     elif t[1].lower() == "substraer":
+          t[0] = Funcion_select(t[3],FUNCIONES_SELECT.SUBSTR)
+     
+def p_funcion_concat_names(t):
+     '''funcion_concat_names : exp COMA funcion_concat_names
+                             | exp'''
+     t[0] = t[1]
 
 def p_funcion_date(t):
      '''funcion_date : extract'''
@@ -1389,7 +1400,7 @@ def p_toperador(t):
      t[0]=t[1]
 
 def p_expresion_aritmetica(t):
-     '''exp_ar : exp SUMA exp
+     '''exp_ar : exp PLUS exp
                | exp RESTA exp
                | exp ASTERISCO exp
                | exp DIVISION exp
@@ -1459,102 +1470,40 @@ def p_expresion_par(t):
      '''E : PAR_A exp PAR_C'''
      t[0] = t[2]
 
-
 def p_crear(t):
-     '''crear : CREATE reemplazar DATABASE verificacion ID propietario modo
-              | CREATE TABLE ID PAR_A columnas PAR_C herencia
-              | CREATE TYPE ID AS ENUM PAR_A lista_exp PAR_C'''
-     if(t[3].lower()=='database'):
-          t[0]=CrearBD(t[2], t[4], Operando_ID(t[5]), t[6], t[7])
+     '''crear : CREATE DATABASE ID
+              | CREATE TABLE ID PAR_A columnas PAR_C'''
+     if(t[2].lower()=='database'):
+          t[0]=CrearBD(t[3])
      else:
           if(t[2].lower()=='table'):
-               t[0]=CrearTabla(Operando_ID(t[3]),t[7],t[5])
+               t[0]=CrearTabla(t[3],t[5])
           else:
-               t[0]=CrearType(Operando_ID(t[3]),t[7])
-     
-def p_reemplazar(t):
-     '''reemplazar : OR REPLACE
-                   | empty'''
-     if(len(t)==3):
-          t[0]=True
-     else:
-          t[0]=False
+               # aqui va la gramatica para crear procedure y funciones
+               print('crear procedure o funcion')
 
-def p_verificacion(t):
-     '''verificacion : IF NOT EXISTS
-                     | empty'''
-     if(len(t)==4):
-          t[0]=True
-     else:
-          t[0]=False
-
-def p_propietario(t):
-     '''propietario : OWNER valorowner
-                    | empty'''
-     if(len(t)==3):
-          t[0]=t[2]
-     else:
-          t[0]=False
-
-def p_valorownero(t):
-     '''valorowner : valoresdefault
-                   | IGUAL valoresdefault'''
-     if(len(t)==3):
-          t[0] = t[2]
-     else:
-          t[0] = t[1]
-
-def p_modo(t):
-     '''modo : MODE valormodo
-             | empty'''
-     if(len(t)==3):
-          t[0]=t[2]
-     else:
-          t[0]=False
-
-def p_valormodoo(t):
-     '''valormodo : ENTERO
-                  | IGUAL ENTERO'''
-     if(len(t)==3):
-          t[0] = t[2]
-     else:
-          t[0] = t[1]
-
-def p_herencia(t):
-     '''herencia : INHERITS PAR_A ID PAR_C
-                 | empty'''
-     if len(t) == 5:
-          t[0] = Operando_ID(t[3])
-     else:
-          t[0] = False
-     
 def p_columnas(t):
      '''columnas : columnas COMA columna
                  | columna'''
-     if(len(t)==4):
+     if(len(t) > 2):
           t[1].append(t[3])
           t[0] = t[1]
      else:
           t[0] = [t[1]]
 
 def p_columna(t):
-     '''columna : ID tipo valortipo zonahoraria atributocolumn
+     '''columna : ID tipo atributocolumn REFERENCE ID PAR_A ID PAR_C
+                | ID tipo atributocolumn
+                | ID tipo PAR_A ENTERO PAR_C atributocolumn
+                | ID tipo PAR_A ENTERO PAR_C atributocolumn REFERENCE ID PAR_A ID PAR_C
                 | PRIMARY KEY PAR_A lnombres PAR_C
-                | FOREIGN KEY PAR_A lnombres PAR_C REFERENCES ID PAR_A lnombres PAR_C'''
+                | FOREIGN KEY PAR_A lnombres PAR_C REFERENCE ID PAR_A lnombres PAR_C'''
      if(t[1].lower()=='primary'):
           t[0]=llaveTabla(True, None, t[4], None)
      elif(t[1].lower()=='foreign'):
           t[0]=llaveTabla(False, t[7], t[4], t[9])
      else:
-          t[0]=columnaTabla(Operando_ID(t[1]), t[2], t[3],t[4], t[5])
-
-def p_columna_const(t):
-     '''columna : constrop UNIQUE PAR_A lista_exp PAR_C
-                | constrop CHECK PAR_A lista_exp PAR_C'''
-
-def p_columna_constraint_op(t):
-     '''constrop : CONSTRAINT ID
-                 | empty'''
+          t[0]=columnaTabla(t[1], t[2], t[3])
 
 def p_tipo(t):
      '''tipo : smallint
@@ -1567,8 +1516,8 @@ def p_tipo(t):
              | money
              | character varying
              | character
-             | char
-             | varchar
+             | nchar
+             | nvarchar
              | text
              | date
              | timestamp
@@ -1592,16 +1541,6 @@ def p_valortipo(t):
      else:
           t[0]=False
 
-
-def p_zona_horaria(t):
-     '''zonahoraria : with time zone
-                    | empty'''
-     if(len(t)==2):
-          t[0]=False
-     else:
-          t[0]=True
-
-
 def p_atributo_columna(t):
      '''atributocolumn : atributocolumn atributo
                        | atributo'''
@@ -1612,29 +1551,17 @@ def p_atributo_columna(t):
           t[0]=[t[1]]
 
 def p_atributo(t):
-     '''atributo : DEFAULT valoresdefault
-                 | CONSTRAINT ID
-                 | NULL 
+     '''atributo : NULL 
                  | NOT NULL
-                 | UNIQUE
                  | PRIMARY KEY
-                 | CHECK PAR_A lista_exp PAR_C
                  | empty'''
      if(t[1]!=None):
           if(t[1].lower()=='null'):
-               t[0]=atributoColumna(None,None,True,None,None,None)
-          elif(t[1].lower()=='unique'):
-               t[0]=atributoColumna(None,None,None,True,None,None)
-          if(t[1].lower()=='default'):
-               t[0]=atributoColumna(t[2],None,None,None,None,None)
-          elif(t[1].lower()=='constraint'):
-               t[0]=atributoColumna(None,t[2],None,None,None,None)
+               t[0]=atributoColumna(True,None)
           elif(t[1].lower()=='primary'):
-               t[0]=atributoColumna(None,None,None,None,True,None)
+               t[0]=atributoColumna(None,True)
           elif(t[1].lower()=='not'):
-               t[0]=atributoColumna(None,None,False,None,None,None)
-          elif(t[1].lower()=='check'):
-               t[0]=atributoColumna(None,None,False,None,None,t[3])
+               t[0]=atributoColumna(False,None)
      else:
           #atributoColumna(default,constraint,null,unique,primary,check);
           t[0]=False

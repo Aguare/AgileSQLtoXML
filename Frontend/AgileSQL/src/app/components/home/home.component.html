@@ -151,7 +151,7 @@
                                     <i class="fas fa-table"></i>
                                 </span>
                             </button>
-                            <button *ngIf="showConsole" class="button is-small is-danger">
+                            <button (click)="this.console = ''" *ngIf="showConsole" class="button is-small is-danger">
                                 <span class="icon is-small">
                                     <i class="fas fa-trash"></i>
                                 </span>

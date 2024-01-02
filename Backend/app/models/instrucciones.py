@@ -2,18 +2,13 @@ class Instruccion:
     '''Esta clase representa cualquier instrucción que pueda ir en una lista de instrucciones'''
 
 class CrearBD(Instruccion) :
-    def __init__(self,reemplazar,verificacion,nombre, propietario, modo) :
-        self.reemplazar = reemplazar
-        self.verificacion = verificacion
+    def __init__(self,nombre) :
         self.nombre = nombre 
-        self.propietario = propietario
-        self.modo = modo
 
 class CrearTabla(Instruccion) :
-    def __init__(self, nombre, padre, columnas = []) :
+    def __init__(self, nombre, columnas = []) :
         self.nombre = nombre
         self.columnas = columnas
-        self.padre = padre
 
 class CrearType(Instruccion) :
     def __init__(self, nombre, valores = []) :
@@ -31,11 +26,9 @@ class EliminarDB(Instruccion) :
         self.existencia = existencia    
 
 class columnaTabla(Instruccion) :
-    def __init__(self, id, tipo, valor,zonahoraria, atributos = []) :
+    def __init__(self, id, tipo, atributos = []) :
         self.id = id
         self.tipo = tipo
-        self.valor = valor
-        self.zonahoraria = zonahoraria
         self.atributos = atributos   
 
 class llaveTabla(Instruccion) :
@@ -46,13 +39,9 @@ class llaveTabla(Instruccion) :
         self.columnasRef = columnasRef
 
 class atributoColumna(Instruccion) :
-    def __init__(self, default,constraint,null,unique,primary,check) :
-        self.default = default
-        self.constraint = constraint
+    def __init__(self, null,primary) :
         self.null = null
-        self.unique = unique
         self.primary = primary
-        self.check = check
 
 class Insertar(Instruccion):
     def __init__(self, nombre, columnas, valores=[]) :

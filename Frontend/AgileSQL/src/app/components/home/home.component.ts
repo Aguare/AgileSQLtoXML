@@ -72,9 +72,9 @@ export class HomeComponent {
     this._compilerService.compile(tabSelected?.code).then((res: any) => {
       if (res.status == 200) {
         res.json().then((data: any) => {
-          this.console += data.message + "\n";
-          this.console += data.mensajes + "\n";
-          this.console += data.type + "\n";
+          this.writeConsole(data.message);
+          this.writeConsole(data.mensajes);
+          this.writeConsole(data.type);
         });
       } else {
         res.json().then((data: any) => {
@@ -87,6 +87,31 @@ export class HomeComponent {
       }
     );
   }
+
+  writeConsole(message: string | string[]) {
+    if (typeof message === 'string') {
+      while (message.length >= 108) {
+        let chunk = message.substring(0, 108);
+        this.console += chunk + "\n";
+        message = message.substring(108);
+      }
+
+      if (message.length > 0) {
+        this.console += message + "\n";
+      }
+    } else if (Array.isArray(message)) {
+      for (let ms of message) {
+        if (ms.length >= 108) {
+          let messages = ms.substring(0, 108);
+          this.console += messages + "\n";
+          this.writeConsole(ms.substring(108));
+        } else {
+          this.console += ms + "\n";
+        }
+      }
+    }
+  }
+
 
   selectTab(tab: any) {
     this.tabs.forEach((tab: any) => tab.isActive = false);
