@@ -739,14 +739,12 @@ def p_seleccionar1(t):
      '''seleccionar1 : SELECT parametros_select cuerpo_select 
                      | SELECT funciones_alias
                      | SELECT funciones_alias cuerpo_select'''
-     if len(t) == 3:
-          t[0] = SELECT(t[1],t[2],t[3],None)
-     elif len(t) == 2:
-               t[0] = SELECT(None,None,None,t[2])
+     if len(t) == 4:
+          t[0] = SELECT(None, t[2], t[3], None)
+     elif len(t) == 3:
+          t[0] = SELECT(None, None, None, t[2])
      else:
-          t[0] = SELECT(t[1],t[2],t[3],None)
-     
-
+          t[0] = SELECT(None, None, t[3], t[2])
 
 def p_funciones_alias(t):
      '''funciones_alias : funciones_alias COMA funcion_alias
