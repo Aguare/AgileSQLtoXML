@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask import send_file
 from backend import *
+
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*", "allow_headers": "Content-Type"}})  # Habilita CORS
@@ -25,11 +27,16 @@ def api_analizar():
     except Exception as e:
         return jsonify({"message": str(e), "type": "error"}), 500
 
+@app.route('/api/arbol', methods=['GET'])
+def descargar_pdf():
+    try:
+        # Aqui se envia el archivo pdf
+        pdf_path = 'reporte_AST.pdf'
 
-@app.route('/api/generar_reporte_errores', methods=['GET'])
-def api_generar_reporte_errores():
-    resultado = generar_reporte_errores()
-    return jsonify(resultado)
+        return send_file(pdf_path, as_attachment=True)
+
+    except Exception as e:
+        return jsonify({"mensaje": str(e), "tipo": "error"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
