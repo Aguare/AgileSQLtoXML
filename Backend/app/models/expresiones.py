@@ -113,6 +113,8 @@ class FUNCIONES_SELECT(Enum):
     AVG = 3
     MIN = 4
     MAX = 5
+    CONCAT = 6
+    SUBSTR = 7
     
 class Expresion:
     '''

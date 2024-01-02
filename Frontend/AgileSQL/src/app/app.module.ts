@@ -9,13 +9,15 @@ import { HomeComponent } from './components/home/home.component';
 import { EditorCodeComponent } from './components/editor-code/editor-code.component';
 import { AngularFontAwesomeModule } from 'angular-font-awesome';
 import { TreeViewComponent } from './components/tree-view/tree-view.component';
+import { DataTableComponent } from './components/data-table/data-table.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     HomeComponent,
     EditorCodeComponent,
-    TreeViewComponent
+    TreeViewComponent,
+    DataTableComponent
   ],
   imports: [
     BrowserModule,

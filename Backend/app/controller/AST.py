@@ -222,49 +222,15 @@ def indice_llaves(llaves,baseAc,ntabla):
 
 #---------Ejecucion Funciones pandas o otro-------------
 def crear_BaseDatos(instr,ts):
-    nombreDB=resolver_operacion(instr.nombre,ts).lower()
-    
-    msg='Creando base de datos: '+nombreDB
+    msg='Creando base de datos: '+ instr.nombre
     agregarMensaje('normal',msg)
 
     #result=0 operacion exitosa
     #result=1 error en la operacion
     #result=2 base de datos existente    
-    
     #se deja 1 como ejemplo pero dse debe igualar al resultado de segun los numeros de arriba PANDAS
-    result = 1
+    result = 0
 
-    if instr.reemplazar and result==2:
-        #eliminar
-        #drop pandas
-        EliminarTablaTemp(nombreDB,'all')#eliminar los temporales
-        #crearpandas se deja de ejemplo 1
-        result = 1
-        if result==1:
-            msg='Error en pandas'
-            agregarMensaje('error',msg)
-        else:
-            msg='Fue Reemplazada'
-            agregarMensaje('alert',msg)
-
-    elif instr.verificacion:
-        if result==0:
-            msg='Todo OK'
-            agregarMensaje('exito',msg)
-        elif result==2 :
-            msg='existe pero se omite error'
-            agregarMensaje('alert',msg)
-            #si retorna error no se muestra
-    else:
-        if result==0:
-            msg='Todo OK'
-            agregarMensaje('exito',msg)
-        elif result==2:
-            msg='Error base de existente: '+nombreDB
-            agregarMensaje('error',msg)
-        elif result==1:
-            msg='Error en pandas'
-            agregarMensaje('error',msg)
 
 def eliminar_BaseDatos(instr,ts):
     nombreDB=str(resolver_operacion(instr.nombre,ts)).lower()
@@ -386,368 +352,19 @@ def seleccion_db(instr,ts):
         
 def crear_Tabla(instr,ts):
 
-    nombreT=resolver_operacion(instr.nombre,ts).lower()
-    listaColumnas=[]
-    crearOK=True
-    pkCompuesta=False
-    msg='Creando Tabla:'+nombreT
-    agregarMensaje('normal',msg)
-    contC=0# variable para contar las columnas a mandar a pandas
-    
-    #verificar el padre
-    if(instr.padre!=False):
-        nombPadre=resolver_operacion(instr.padre,ts).lower()
-        herencia=buscarTabla(baseActiva,nombPadre)
-        #error no existe la tabla
-        if(herencia==None):
-            crearOK=False
-            Errores_Semanticos.append("Error Semantico: No existe la tabla para la herencia:"+nombPadre)
-            msg='42P01:No existe la tabla para la herencia:'+nombPadre
-            agregarMensaje('error',msg)
-        #copiar las columnas
-        else:
-            for col in herencia.atributos:
-                msg='columna herencia:'+col.nombre
-                agregarMensaje('alert',msg)
-                listaColumnas.append(col)
-    
-    #recorrer las columnas
-    for colum in instr.columnas :
-        colAux=Columna_run()#columna temporal para almacenar
-        #bloque de llaves primarias o foraneas
-        if isinstance(colum, llaveTabla) :
-            #bloque de primarias
-            if(colum.tipo==True):
-                if(pkCompuesta==False):
-                    pkCompuesta=True#primer bloque pk(list)
-                    #pk compuesta, revisar la lista
-                    for pkC in colum.columnas:
-                        exCol=False
-                        for lcol in listaColumnas:
-                            if(lcol.nombre==pkC.lower()):
-                                exCol=True
-                                
-                                new_id=""
-                                for con in colum.columnas:
-                                    if new_id=="":
-                                        new_id=new_id+con
-                                    else:
-                                        new_id=new_id+"_"+con
-
-                                print("saca columnas:",new_id)
-                                (lcol.constraint).primary=new_id
-
-                                if(lcol.primary==None):
-                                    lcol.primary=True
-                                else:
-                                    crearOK=False
-                                    msg='primary key repetida:'+pkC.lower()
-                                    agregarMensaje('error',msg) 
-                                    Errores_Semanticos.append("Error Semantico: 42P16: Primary key Repetida "+pkC.lower())
-                                      
-                        if(exCol==False):
-                            crearOK=False
-                            Errores_Semanticos.append("Error Semantico: 42P16: No se puede asignar como primaria: "+pkC.lower())
-                            msg='42P16:No se puede asignar como primaria:'+pkC.lower()
-                            agregarMensaje('error',msg)
-                            
-
-                else: 
-                    crearOK=False
-                    msg='42P16:Solo puede existir un bloque de PK(list)'
-                    agregarMensaje('error',msg)
-                    Errores_Semanticos.append("Error Semantico: 42P16:  Solo puede existir un bloque de PK(list)")
-            #bloque de foraneas
-            else:
-                refe=colum.referencia.lower()
-                tablaRef=buscarTabla(baseActiva,refe)
-                #no existe la tabla de referencia
-                if(tablaRef==None):
-                    crearOK=False
-                    msg='42P01:no existe la referencia a la Tabla '+refe
-                    agregarMensaje('error',msg)
-                    Errores_Semanticos.append("Error Semantico: 42P01: No existe la referencia a la Tabla "+refe)
-                else:
-                    #validar #columnas==#refcolums
-                    if(len(colum.columnas)==len(colum.columnasRef)):
-                        #verificar si existen dentro de la tabla a crear
-                        pos=0#contador para referencias
-                        for fkC in colum.columnas:
-                            exCol=False
-                            for lcol in listaColumnas:
-                                if(lcol.nombre==fkC.lower()):
-                                    exCol=True
-                                    if(lcol.foreign==None):
-                                        #validar si existe en la tabla de referencia
-                                        exPK=False
-                                        for pkC in tablaRef.atributos:
-                                            #validar nombre y Primary
-                                            if(pkC.nombre==colum.columnasRef[pos].lower() and pkC.primary==True):
-                                                exPK=True
-                                                lcol.foreign=True #asignar como foranea
-                                                lcol.refence=[refe,pkC.nombre] #guardar la tabla referencia y la columna
-                                                
-                                                
-                                                new_id=""
-                                                for con in colum.columnasRef:
-                                                    if new_id=="":
-                                                        new_id=new_id+con
-                                                    else:
-                                                        new_id=new_id+"_"+con
-                                                print("saca columnas:",new_id)
-                                                (lcol.constraint).foreign=new_id
-
-                                                if(pkC.tipo!=lcol.tipo):
-                                                    crearOK=False
-                                                    msg='42804:no coicide el tipo de dato:'+colum.columnasRef[pos]
-                                                    agregarMensaje('error',msg)
-                                                    Errores_Semanticos.append("Error Semantico: no coicide el tipo de dato:"+colum.columnasRef[pos])
-                                                break                                  
-                                        if(exPK==False):
-                                            crearOK=False
-                                            msg='42703:no existe la referencia pk:'+colum.columnasRef[pos]
-                                            agregarMensaje('error',msg)
-                                            Errores_Semanticos.append("Error Semantico 42703: No existe la referencia pk: "+colum.columnasRef[pos])
-                                    else:
-                                        crearOK=False
-                                        msg='foreign key repetida:'+fkC.lower()
-                                        agregarMensaje('error',msg)
-                                        Errores_Semanticos.append("Error Semantico 42P16: foreign key repetida: "+fkC.lower())
-                            if(exCol==False):
-                                crearOK=False
-                                msg='42P16:No se puede asignar como foranea:'+fkC.lower()
-                                agregarMensaje('error',msg)
-                                Errores_Semanticos.append('Error Semantico 42P16:No se puede asignar como foranea: '+fkC.lower())
-                            pos=pos+1
-                    else:
-                        crearOK=False
-                        msg='42P16: la cantidad de referencias es distinta: '+str(len(colum.columnas))+'!='+str(len(colum.columnasRef))
-                        agregarMensaje('error',msg)
-                        Errores_Semanticos.append('Error Semantico 42P16: la cantidad de referencias es distinta: '+str(len(colum.columnas))+'!='+str(len(colum.columnasRef)))
-        #columna
-        elif isinstance(colum, columnaTabla) :
-            contC=contC+1
-            colAux.nombre=resolver_operacion(colum.id,ts).lower()#guardar nombre col
-            #revisar columnas repetidas
-            pos=0
-            colOK=True
-            while pos< len(listaColumnas):
-                if(listaColumnas[pos].nombre==colAux.nombre):
-                    crearOK=False;
-                    colOK=False
-                    msg='42701:nombre de columna repetido:'+colAux.nombre
-                    agregarMensaje('error',msg)
-                    Errores_Semanticos.append('Error Semantico 42701:nombre de columna repetido:'+colAux.nombre)
-                    break;
-                else:
-                    pos=pos+1
-            #si no existe el nombre de la columna revisa el resto de errores
-            if(colOK):
-                if isinstance(colum.tipo,Operando_ID):
-                    colAux.tipo=resolver_operacion(colum.tipo,ts).lower()#guardar tipo col
-                    tablaType=buscarTabla(baseActiva,colAux.tipo)#revisar la lista de Types
-                    if(tablaType==None):
-                        crearOK=False
-                        msg='42704:No existe el Type '+colAux.tipo+' en la columna '+colAux.nombre
-                        agregarMensaje('error',msg)
-                        Errores_Semanticos.append('Error Semantico 42704:No existe el Type '+colAux.tipo+' en la columna '+colAux.nombre)
-
-                else:
-                    colAux.tipo=colum.tipo.lower() #guardar tipo col
-                if(colum.valor!=False):
-                    if(colAux.tipo=='character varying' or colAux.tipo=='varchar' or colAux.tipo=='character' or colAux.tipo=='char' or colAux.tipo=='interval'):
-                        if(len(colum.valor)==1):
-                            errT=True;#variable error en p varchar(p)
-                            if isinstance(colum.valor[0],Operando_Numerico):
-                                val=resolver_operacion(colum.valor[0],ts)
-                                if(type(val) == int):
-                                    colAux.size=val
-                                    errT=False#no existe error
-                            if errT:
-                                crearOK=False
-                                msg='42601:el tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre
-                                agregarMensaje('error',msg)
-                                Errores_Semanticos.append('Error Semantico: 42601: El tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre)
-                        else:
-                            crearOK=False
-                            msg='42601:el tipo '+colAux.tipo+' solo acepta 1 parametro: '+colAux.nombre
-                            agregarMensaje('error',msg)
-                            Errores_Semanticos.append('Error Semantico: 42601:el tipo '+colAux.tipo+' solo acepta 1 parametro: '+colAux.nombre)
-                    elif(colAux.tipo=='decimal' or colAux.tipo=='numeric'):
-                        if(len(colum.valor)==1):
-                            errT=True;#variable error en p varchar(p)
-                            if isinstance(colum.valor[0],Operando_Numerico):
-                                val=resolver_operacion(colum.valor[0],ts)
-                                if(type(val) == int):
-                                    colAux.size=val
-                                    errT=False#no existe error
-                            if errT:
-                                crearOK=False
-                                msg='42601:el tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre
-                                agregarMensaje('error',msg)
-                                Errores_Semanticos.append('Error Semantico: 42601:el tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre)
-                        elif(len(colum.valor)==2):
-                            errT=True;#variable error en p varchar(p)
-                            if (isinstance(colum.valor[0],Operando_Numerico) and isinstance(colum.valor[1],Operando_Numerico)):
-                                val1=resolver_operacion(colum.valor[0],ts)
-                                val2=resolver_operacion(colum.valor[1],ts)
-                                if(type(val1) == int and type(val2) == int):
-                                    colAux.size=val1
-                                    colAux.precision=val2
-                                    errT=False#no existe error
-                            if errT:
-                                crearOK=False
-                                msg='42601:el tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre
-                                agregarMensaje('error',msg)
-                                Errores_Semanticos.append('Error Semantico: 42601:el tipo '+colAux.tipo+' acepta enteros como parametro: '+colAux.nombre)
-                        else:
-                            crearOK=False
-                            msg='42601:el tipo '+colAux.tipo+' acepta maximo 2 parametro: '+colAux.nombre
-                            agregarMensaje('error',msg)
-                            Errores_Semanticos.append('Error Semantico: 42601:el tipo '+colAux.tipo+' acepta maximo 2 parametro: '+colAux.nombre)
-                    else:
-                        crearOK=False
-                        msg='42601:el tipo '+colAux.tipo+' no acepta parametros:'+colAux.nombre
-                        agregarMensaje('error',msg)
-                        Errores_Semanticos.append('Error Semantico: 42601:el tipo '+colAux.tipo+' no acepta parametros:'+colAux.nombre)
-                if(colum.zonahoraria!=False):
-                    '''aca se debe verificar la zonahoraria es una lista'''
-                    print('zonahoraria',colum.zonahoraria)
-                if(colum.atributos!=False):
-                    #aca se debe verificar la lista de atributos de una columna
-                    for atributoC in colum.atributos :
-                        if isinstance(atributoC, atributoColumna):
-                            if(atributoC.default!=None):
-                                if(colAux.default==None):
-                                    T=resolver_operacion(atributoC.default,ts)#valor default
-                                    T=validarTipo(colAux.tipo,T)
-                                    if isinstance(atributoC.default,Operando_ID):
-                                        crearOK=False
-                                        msg='42804:no se puede asignar como default un ID col:'+colAux.nombre
-                                        agregarMensaje('error',msg)
-                                        Errores_Semanticos.append('Error Semantico: 42804:no se puede asignar como default un ID col:'+colAux.nombre)
-                                    elif(T==None or isinstance(atributoC.default,Operando_ID)):
-                                        T=''
-                                        crearOK=False
-                                        msg='42804:valor default != '+colAux.tipo+ ' en col:'+colAux.nombre
-                                        agregarMensaje('error',msg)
-                                        Errores_Semanticos.append('Error Semantico: 42804:valor default != '+colAux.tipo+ ' en col:'+colAux.nombre)
-                                    colAux.default=T#guardar default
-                                else:
-                                    crearOK=False
-                                    msg='42P16:atributo default repetido en Col:'+colAux.nombre
-                                    agregarMensaje('error',msg)
-                                    Errores_Semanticos.append('Error Semantico: 42P16:atributo default repetido en Col:'+colAux.nombre)
-                            elif(atributoC.constraint!=None):
-                                if(colAux.constraint==None):
-                                    colAux.constraint=atributoC.constraint#guardar constraint
-                                else:
-                                    crearOK=False
-                                    msg='42P16:atributo constraint repetido en Col:'+colAux.nombre
-                                    agregarMensaje('error',msg)
-                                    Errores_Semanticos.append('Error Semantico: 42P16:atributo constraint repetido en Col:'+colAux.nombre)
-                            elif(atributoC.null!=None):
-                                if(colAux.anulable==None):
-                                    colAux.anulable=atributoC.null#guardar anulable
-                                else:
-                                    crearOK=False
-                                    msg='42P16:atributo anulable repetido en Col:'+colAux.nombre
-                                    agregarMensaje('error',msg)
-                                    Errores_Semanticos.append('Error Semantico: 42P16:atributo anulable repetido en Col:'+colAux.nombre)
-                            elif(atributoC.unique!=None):
-                                if(colAux.unique==None):
-                                    colAux.unique=atributoC.unique#guardar unique
-                                else:
-                                    crearOK=False
-                                    msg='42P16:atributo unique repetido en Col:'+colAux.nombre
-                                    agregarMensaje('error',msg)
-                                    Errores_Semanticos.append('Error Semantico: 42P16:atributo unique repetido en Col:'+colAux.nombre)
-                            elif(atributoC.primary!=None):
-                                if(colAux.primary==None):
-                                    colAux.primary=atributoC.primary#guardar primary
-                                else:
-                                    crearOK=False
-                                    msg='42P16:atributo primary repetido en Col:'+colAux.nombre
-                                    agregarMensaje('error',msg)
-                                    Errores_Semanticos.append('Error Semantico: 42P16:atributo primary repetido en Col:'+colAux.nombre)
-                            elif(atributoC.check != None):
-                                #el atributo check trae otra lista
-                                print('check:',atributoC.check)
-                                for exp in atributoC.check:
-                                    print('resultado: ',resolver_operacion(exp,ts))
-                listaColumnas.append(colAux)
-    
-    #validar foranea compuesta
-    if(crearOK):
-        listFK=[]
-        #recorrer la tabla nueva para obtener las referencias
-        for col in listaColumnas:
-            if(col.foreign):
-                if col.refence[0] not in listFK:
-                    listFK.append(col.refence[0])
-        lenFK=[]
-        lenPK=[]
-        
-        #obtener longitud de foranea
-        for tab in listFK:
-            lenPK.append(0)
-            lenFK.append(len(getpks(baseActiva,tab)))
-        #obtener la longitud de foranea en tabla actual
-        for col in listaColumnas:
-            if(col.foreign):
-                contFK=0
-                for tab in listFK:
-                    if(col.refence[0]==tab):
-                        lenPK[contFK]+=1
-                        break
-                    contFK=contFK+1
-        #validar #foraneas==#primarias en referencia
-        pos=0
-        while pos<len(listFK):
-            if(lenFK[pos]!=lenPK[pos]):
-                crearOK=False
-                msg='42830:llave foranea debe ser compuesta ref:'+listFK[pos]
-                agregarMensaje('error',msg)
-                Errores_Semanticos.append('Error Semantico: 42830:llave foranea debe ser compuesta ref:'+listFK[pos])
-            pos+=1
-        #print('lista de Referencias:',listFK)
-        #print('count pk en la  refe:',lenFK)
-        #print('count fk tabla nueva:',lenPK)
-    #crear la tabla
-    if(crearOK):
-        ##########################################
-        # SHOW DATABASES con pandas se dejo " " como ejemplo
-        result = ""
-        if(result!=None):
-            for tab in result:
-                if tab==nombreT:
-                    msg='42P07:Error la tabla ya existe:'+nombreT
-                    agregarMensaje('error',msg)
-                    Errores_Semanticos.append('Error Semantico: 42P07: Latabla '+ nombreT + ' ya existe')
-                    crearOK=False
-                    break
-            if crearOK:
-                ##########################################
-                # CREATE DATABASES con pandas se dejo " " como ejemplo, puede que se necesite mandar:  baseActiva,nombreT,contC
-                insertartabla(listaColumnas,nombreT)
-                msg='Todo OK'
-                agregarMensaje('exito',msg)
-                #agregar las llaves primarias
-                x=0
-                lis=[]
-                for col in listaColumnas:
-                    if(col.primary==True):
-                        lis.append(x)
-                    x=x+1
-                if(len(lis)>0):
-                    ##########################################
-                    #ALTER TABLE base activa - nombreeT - lis
-                    print("alter table")
-
-        else:
-            msg='no existe la base de datos activa:'+baseActiva
-            Errores_Semanticos.append('Error Semantico: no existe la base de datos activa:'+baseActiva)
-            agregarMensaje('error',msg)
+    # nombreT=resolver_operacion(instr.nombre,ts).lower()
+    # listaColumnas=[]
+    print("-------------- CREATE TABLE --------------")
+    print('Creando Tabla:' + instr.nombre)
+    for col in instr.columnas:
+        if isinstance(col, columnaTabla):
+                print('Columna: ' + col.id)        
+                for at in col.atributos:
+                    if isinstance(at, atributoColumna):
+                        print('NULL: ' + str(at.null) + ' PRIMARY: ' + str(at.primary))
+    print("-------------- FIN CREATE TABLE --------------")
+    # msg='Creando Tabla:' + instr.nombre
+    # agregarMensaje('normal',msg)
 
 def crear_Type(instr,ts):
     nombreT=resolver_operacion(instr.nombre,ts).lower()
@@ -840,8 +457,8 @@ def insertar_en_tabla(instr,ts):
         if(nombreT not in result):
             insertOK=False
             msg=':la tabla no existe en DB:'+baseActiva
-            agregarMensaje('error',msg)
-            Errores_Semanticos.append('Error Semantico: '+':la tabla no existe en DB:'+baseActiva)
+            agregarMensaje('normal',msg)
+            #Errores_Semanticos.append('\n Error Semántico-> '+':la tabla no existe en DB:'+baseActiva)
         else:
             tablaInsert = buscarTabla(baseActiva,nombreT)
     else:
@@ -3382,7 +2999,6 @@ def Analizar(input):
         # crea la consola y muestra el resultado
         global outputTxt
         agregarSalida(outputTxt)
-        print("supuestamente hay una lista abajo")
         print(listmsg)
         # return listmsg
         

@@ -86,7 +86,7 @@
         <div class="column">
             <div class="tabs-container">
                 <div class="pb-1 is-1">
-                    <button class="button is-rounded is-small is-success">
+                    <button (click)="executeCode()" class="button is-rounded is-small is-success">
                         <span class="icon is-small">
                             <i class="fas fa-play-circle"></i>
                         </span>
@@ -139,18 +139,40 @@
                       }" [(ngModel)]="tab.code"></ngx-codemirror>
                 </div>
                 <div class="container mt-6">
-                    <article class="message is-info">
-                        <div class="message-header">
-                            Salida de Datos
+                    <div class="columns">
+                        <div class="column column-toolbar is-flex is-flex-direction-column">
+                            <button (click)="showConsole = true" class="button is-small is-dark">
+                                <span class="icon is-small">
+                                    <i class="fas fa-terminal"></i>
+                                </span>
+                            </button>
+                            <button (click)="showConsole = false" class="button is-small is-info">
+                                <span class="icon is-small">
+                                    <i class="fas fa-table"></i>
+                                </span>
+                            </button>
+                            <button (click)="this.console = ''" *ngIf="showConsole" class="button is-small is-danger">
+                                <span class="icon is-small">
+                                    <i class="fas fa-trash"></i>
+                                </span>
+                            </button>
                         </div>
-                        <ngx-codemirror class="console" [options]="{
-                            theme: 'dracula',
-                            mode: 'sql',
-                            lineNumbers: true,
-                            readOnly: true,
-                            styleActiveLine: true
-                          }" [(ngModel)]="console"></ngx-codemirror>
-                    </article>
+                        <div class="column">
+                            <article class="message is-info">
+                                <div class="message-header">
+                                    Salida de Datos
+                                </div>
+                                <ngx-codemirror *ngIf="showConsole" class="console" [options]="{
+                                        theme: 'dracula',
+                                        mode: 'sql',
+                                        lineNumbers: true,
+                                        readOnly: true,
+                                        styleActiveLine: true
+                                    }" [(ngModel)]="console"></ngx-codemirror>
+                            </article>
+                            <app-data-table *ngIf="!showConsole"></app-data-table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
