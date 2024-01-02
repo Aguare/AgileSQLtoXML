@@ -769,7 +769,65 @@ def guardar_datos_panda(dataframe, nombre_archivo, nombre_tabla):
             nueva_fila[-1].tail = "\n"
 
     # Guardar el árbol XML actualizado
-    tree.write("archivosBD/"+nombre_archivo+".xml", encoding="utf-8", xml_declaration=True)
+    tree.write("Backend/app/funcionesSql/archivosBD/"+nombre_archivo+".xml", encoding="utf-8", xml_declaration=True)
 
+  
+
+#funcion para complementar el insert
+def insert_primitivo_columnas(BaseActiva,tabla,columnas,valores):
+    if columnas != "X":
+
+        if len(columnas) == len(valores):
+            print("validacion de tamanio exitoso")
+        #preparar para el insert de formar into ____ values ____
+            columnasPreparadas = {}
+        
+            for i, columna in enumerate(columnas):
+                columnasPreparadas[columna]=valores[i]
+
+
+            print(columnasPreparadas)        
+       # agregar_fila(nombre_archivo, nombre_tabla, {"id": 5, "nombre": "Maestro 5","salario": 6000,"id_materia": 3})
+        else:
+            error="tamaño de columnas distinto al de valores a ingresar"
+        
+            mensaje ={"message": [error], "type": ["error", "error"]}
+            print(mensaje)
+    else:
+        columnasGet= obtener_columnas(BaseActiva,tabla)
+        print(columnasGet)
+        columnasPreparadas2 = {}
+        if len(columnasGet) == len(valores):
+            for i, columna in enumerate(columnasGet):
+                columnasPreparadas2[columna]=valores[i]
+
+            print(columnasPreparadas2)
+            # agregar_fila(nombre_archivo, nombre_tabla,columnasPreparadas2)
+        else:
+            error="tamaño de columnas distinto al de valores a ingresar"
+
+            mensaje ={"message": [error], "type": ["error", "error"]}
+            print(mensaje)
+     
+
+
+
+
+def obtener_columnas(nombre_archivo, nombre_tabla):
+    tree = ET.parse("Backend/app/funcionesSql/archivosBD/"+nombre_archivo+".xml")
+    root = tree.getroot()
+
+    # Buscar la tabla y sus columnas
+    tabla_existente = root.find(nombre_tabla)
+    if tabla_existente is None:
+        error=f"Error: La tabla '{nombre_tabla}' no existe."
+        mensaje ={"message": [error], "type": ["error", "error"]}
+        print(mensaje)
+        return []
+
+    # Obtener las columnas de la tabla
+    columnas = [columna.get("nombre") for columna in tabla_existente.findall("./columna")]
+
+    return columnas
   
 
